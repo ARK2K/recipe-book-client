@@ -22,14 +22,43 @@ function Signup() {
   };
 
   return (
-    <div className="col-md-6 offset-md-3">
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" className="form-control mb-2" placeholder="Name" value={name} onChange={e => setName(e.target.value)} required />
-        <input type="email" className="form-control mb-2" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-        <input type="password" className="form-control mb-2" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
-        <button className="btn btn-primary w-100">Sign Up</button>
-      </form>
+    <div className="container my-5">
+      <div className="row justify-content-center">
+        <div className="col-12 col-sm-8 col-md-6 col-lg-5">
+          <div className="card shadow-sm p-4">
+            <h2 className="mb-4 text-center">Sign Up</h2>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                className="form-control mb-3"
+                placeholder="Name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
+              <input
+                type="email"
+                className="form-control mb-3"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                className="form-control mb-3"
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <button type="submit" className="btn btn-primary w-100">
+                Sign Up
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -18,12 +18,17 @@ function RecipeForm({ recipe }) {
   };
 
   return (
-    <div className="recipe-card">
-      <h5>{recipe.title}</h5>
-      <p>{recipe.description}</p>
-      <button onClick={handleViewClick} className="btn btn-primary">
-        View
-      </button>
+    <div className="card h-100 shadow-sm">
+      <div className="card-body d-flex flex-column">
+        <h5 className="card-title">{recipe.title}</h5>
+        <p className="card-text flex-grow-1">{recipe.description}</p>
+        <button
+          onClick={handleViewClick}
+          className="btn btn-primary mt-auto align-self-start"
+        >
+          View
+        </button>
+      </div>
     </div>
   );
 }
