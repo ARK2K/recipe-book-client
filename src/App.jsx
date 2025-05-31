@@ -14,7 +14,10 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   useEffect(() => {
-    fetch(import.meta.env.VITE_API_URL + '/api/ping');
+    fetch(import.meta.env.VITE_API_URL + '/api/ping')
+    .then(res => res.text())
+    .then(console.log)
+    .catch(console.error);
   }, []);
 
   return (

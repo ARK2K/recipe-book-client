@@ -58,16 +58,19 @@ function RecipeForm() {
       toast.error('Title is required');
       return;
     }
-    if (ingredients.some(ing => !ing.trim())) {
-      toast.error('Ingredients cannot be empty');
+
+    const cleanedIngredients = ingredients.map(i => i.trim()).filter(i => i.length > 0);
+    if (cleanedIngredients.length === 0) {
+      toast.error('Please add at least one ingredient');
       return;
     }
+
     if (!instructions.trim()) {
       toast.error('Instructions are required');
       return;
     }
 
-    if (!user) {
+    if (!user?.token) {
       toast.error('You must be logged in to submit a recipe');
       return;
     }
@@ -75,7 +78,7 @@ function RecipeForm() {
     const recipeData = {
       title: title.trim(),
       description: description.trim(),
-      ingredients: ingredients.map(i => i.trim()),
+      ingredients: cleanedIngredients,
       instructions: instructions.trim(),
     };
 
@@ -83,24 +86,21 @@ function RecipeForm() {
 
     try {
       if (id) {
-        // Editing existing recipe
         await api.put(`/api/recipes/${id}`, recipeData, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         toast.success('Recipe updated successfully');
+        navigate(`/recipes/${id}`);
       } else {
-        // Creating new recipe
         const res = await api.post('/api/recipes', recipeData, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         toast.success('Recipe created successfully');
         navigate(`/recipes/${res.data._id}`);
-        return;
       }
-      // On update, navigate to recipe details
-      navigate(`/recipes/${id}`);
     } catch (error) {
-      toast.error('Failed to save recipe');
+      const message = error.response?.data?.message || 'Failed to save recipe';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
