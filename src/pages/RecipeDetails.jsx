@@ -1,21 +1,34 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react'; 
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 
 function RecipeDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
+
   const [recipe, setRecipe] = useState(null);
   const [rating, setRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     api.get(`/api/recipes/${id}`)
-      .then(res => setRecipe(res.data))
-      .catch(() => toast.error('Failed to load recipe'));
+      .then(res => {
+        setRecipe(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        toast.error('Failed to load recipe');
+        setLoading(false);
+      });
   }, [id]);
+
+  // Check if current user is the creator of the recipe
+  const isCreator = user && recipe && user._id === recipe.creatorId;
 
   const submitRating = async (newRating) => {
     if (!user) {
@@ -29,6 +42,7 @@ function RecipeDetails() {
       });
       toast.success('Thanks for rating!');
       setRating(newRating);
+      // Refresh recipe details to update average rating
       const res = await api.get(`/api/recipes/${id}`);
       setRecipe(res.data);
     } catch {
@@ -38,7 +52,27 @@ function RecipeDetails() {
     }
   };
 
-  if (!recipe) return <p className="text-center mt-5">Loading...</p>;
+  const handleEdit = () => {
+    navigate(`/recipes/edit/${id}`);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this recipe?')) return;
+
+    try {
+      await api.delete(`/api/recipes/${id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      toast.success('Recipe deleted successfully');
+      navigate('/');
+    } catch {
+      toast.error('Failed to delete recipe');
+    }
+  };
+
+  if (loading) return <p className="text-center mt-5">Loading...</p>;
+
+  if (!recipe) return <p className="text-center mt-5">Recipe not found.</p>;
 
   return (
     <div className="container my-4">
@@ -75,6 +109,17 @@ function RecipeDetails() {
             ))}
           </div>
 
+          {isCreator && (
+            <div className="mb-4">
+              <button onClick={handleEdit} className="btn btn-warning me-2">
+                Edit
+              </button>
+              <button onClick={handleDelete} className="btn btn-danger">
+                Delete
+              </button>
+            </div>
+          )}
+
           <div className="mt-4">
             <h6>Share this recipe:</h6>
             <input
@@ -86,7 +131,7 @@ function RecipeDetails() {
             />
           </div>
 
-        </div>
+        </div>  
       </div>
     </div>
   );
