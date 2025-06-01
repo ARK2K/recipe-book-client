@@ -1,124 +1,94 @@
-import { useState, useEffect } from 'react';
-import { Row, Col, Form, Button, Spinner, Alert } from 'react-bootstrap';
-import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
-import RecipeCard from '../components/RecipeCard';
+import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/authService';
 
-const ProfilePage = () => {
-  const { user } = useAuth();
-  const [profileName, setProfileName] = useState(user?.name || '');
-  const [profileEmail, setProfileEmail] = useState(user?.email || '');
-  const [loadingUpdate, setLoadingUpdate] = useState(false);
-  const [profileRecipes, setProfileRecipes] = useState([]);
-  const [loadingRecipes, setLoadingRecipes] = useState(true);
-  const [errorRecipes, setErrorRecipes] = useState(null);
-
+function ProfilePage() {
+  const { user, login } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
-    const fetchUserRecipes = async () => {
-      if (!user) {
-        setLoadingRecipes(false);
-        return;
-      }
-      try {
-        setLoadingRecipes(true);
-        setErrorRecipes(null);
-        // You'll need a backend endpoint for user's recipes or filter client-side
-        // For simplicity, we'll fetch all recipes and filter. A dedicated endpoint is better for performance.
-        const { data } = await axios.get(`http://localhost:5000/api/recipes`);
-        const userRecipes = data.recipes.filter(recipe => recipe.user._id === user._id);
-        setProfileRecipes(userRecipes);
-      } catch (err) {
-        setErrorRecipes(err.response?.data?.message || 'Failed to fetch user recipes');
-      } finally {
-        setLoadingRecipes(false);
-      }
-    };
-
-    fetchUserRecipes();
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+    }
   }, [user]);
 
-  const updateProfileHandler = async (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setLoadingUpdate(true);
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
     try {
-      // This requires a PUT /api/auth/profile endpoint on backend to update user info
-      // You'll need to implement this in authController and authRoutes
-      // For now, this is a placeholder.
-      // const config = {
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${user.token}`,
-      //   },
-      // };
-      // const { data } = await axios.put('http://localhost:5000/api/auth/profile', { name: profileName, email: profileEmail }, config);
-      // localStorage.setItem('userInfo', JSON.stringify(data)); // Update localStorage
-      // setUser(data); // Update context
-      toast.success('Profile updated successfully (frontend placeholder)');
-      setLoadingUpdate(false);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
-      setLoadingUpdate(false);
+      const updatedUser = { name, email };
+      if (password) {
+        updatedUser.password = password;
+      }
+      const data = await authService.updateProfile(updatedUser);
+      login(data.user, data.token);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     }
   };
 
-  if (!user) {
-    return <Alert variant="info">Please log in to view your profile.</Alert>;
-  }
-
   return (
-    <Row>
-      <Col md={3}>
-        <h2>User Profile</h2>
-        <Form onSubmit={updateProfileHandler}>
-          <Form.Group controlId="name" className="mb-3">
+    <div className="d-flex justify-content-center">
+      <Col md={6}>
+        <h1>User Profile</h1>
+        <Form onSubmit={submitHandler}>
+          <Form.Group className="my-3" controlId="name">
             <Form.Label>Name</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter name"
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             ></Form.Control>
           </Form.Group>
 
-          <Form.Group controlId="email" className="mb-3">
+          <Form.Group className="my-3" controlId="email">
             <Form.Label>Email Address</Form.Label>
             <Form.Control
               type="email"
               placeholder="Enter email"
-              value={profileEmail}
-              onChange={(e) => setProfileEmail(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             ></Form.Control>
           </Form.Group>
-          {/* Add password change if desired */}
 
-          <Button type="submit" variant="primary" disabled={loadingUpdate}>
-            {loadingUpdate ? 'Updating...' : 'Update Profile'}
+          <Form.Group className="my-3" controlId="password">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Enter new password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            ></Form.Control>
+          </Form.Group>
+
+          <Form.Group className="my-3" controlId="confirmPassword">
+            <Form.Label>Confirm Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            ></Form.Control>
+          </Form.Group>
+
+          <Button type="submit" variant="primary">
+            Update Profile
           </Button>
         </Form>
       </Col>
-      <Col md={9}>
-        <h2>My Recipes</h2>
-        {loadingRecipes ? (
-          <Spinner animation="border" />
-        ) : errorRecipes ? (
-          <Alert variant="danger">{errorRecipes}</Alert>
-        ) : profileRecipes.length === 0 ? (
-          <Alert variant="info">You haven't created any recipes yet. <Link to="/recipes/new">Create one!</Link></Alert>
-        ) : (
-          <Row>
-            {profileRecipes.map((recipe) => (
-              <Col key={recipe._id} sm={12} md={6} lg={4}>
-                <RecipeCard recipe={recipe} />
-              </Col>
-            ))}
-          </Row>
-        )}
-      </Col>
-    </Row>
+    </div>
   );
-};
+}
 
 export default ProfilePage;
