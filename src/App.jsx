@@ -18,15 +18,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
   const location = useLocation();
-  console.log('Current path:', location.pathname);
 
   useEffect(() => {
     const wakeUpBackend = async () => {
       try {
         await axios.get(`${API_BASE_URL}/api/health`);
-      } catch (error) {
-        console.error('Backend wake-up failed:', error.message);
-      }
+      } catch (error) {}
     };
     wakeUpBackend();
   }, []);
@@ -40,9 +37,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/profile" element={<PrivateRoute element={ProfilePage} />} />
-            <Route path="/recipes/new" element={<PrivateRoute element={AddRecipePage} />} />
-            <Route path="/recipes/:id/edit" element={<PrivateRoute element={EditRecipePage} />} />
+            <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
+            <Route path="/recipes/new" element={<PrivateRoute element={<AddRecipePage />} />} />
+            <Route path="/recipes/:id/edit" element={<PrivateRoute element={<EditRecipePage />} />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
           </Routes>
         </div>

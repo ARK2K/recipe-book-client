@@ -1,31 +1,47 @@
-// src/services/authService.js
-import axiosInstance from '../utils/axiosInstance';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-const authService = {
-  login: async (email, password) => {
-    const response = await axiosInstance.post('/api/auth/login', { email, password });
-    return response.data;
-  },
+const Homepage = () => {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  register: async (name, email, password) => {
-    const response = await axiosInstance.post('/api/auth/register', { name, email, password });
-    return response.data;
-  },
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        const { data } = await axios.get('/api/recipes');
+        setRecipes(Array.isArray(data) ? data : []);
+      } catch {
+        setError('Failed to load recipes');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecipes();
+  }, []);
 
-  logout: async () => {
-    const response = await axiosInstance.post('/api/auth/logout');
-    return response.data;
-  },
+  if (loading) return <p>Loading recipes...</p>;
+  if (error) return <p>{error}</p>;
 
-  getProfile: async () => {
-    const response = await axiosInstance.get('/api/auth/profile');
-    return response.data;
-  },
-
-  updateProfile: async (profileData) => {
-    const response = await axiosInstance.put('/api/auth/profile', profileData);
-    return response.data;
-  }
+  return (
+    <div>
+      <h1>Recipe Book</h1>
+      <div>
+        {recipes.length === 0 && <p>No recipes found.</p>}
+        <ul>
+          {recipes.map(recipe => (
+            <li key={recipe._id} style={{ marginBottom: '1rem' }}>
+              <Link to={`/recipes/${recipe._id}`}>
+                <h3>{recipe.title}</h3>
+              </Link>
+              <p>{recipe.description?.substring(0, 100)}...</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 };
 
-export default authService;
+export default Homepage;

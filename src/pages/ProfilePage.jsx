@@ -1,94 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/AuthContext';
-import authService from '../services/authService';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams, Link } from 'react-router-dom';
 
-function ProfilePage() {
-  const { user, login } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const ProfilePage = () => {
+  const { username } = useParams();
+  const [user, setUser] = useState(null);
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-    }
-  }, [user]);
-
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    try {
-      const updatedUser = { name, email };
-      if (password) {
-        updatedUser.password = password;
+    const fetchUserProfile = async () => {
+      try {
+        const { data } = await axios.get(`/api/users/${username}`);
+        setUser(data.user);
+        setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
+      } catch {
+        setError('Failed to load profile');
+      } finally {
+        setLoading(false);
       }
-      const data = await authService.updateProfile(updatedUser);
-      login(data.user, data.token);
-      toast.success('Profile updated successfully!');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile');
-    }
-  };
+    };
+    fetchUserProfile();
+  }, [username]);
+
+  if (loading) return <p>Loading profile...</p>;
+  if (error) return <p>{error}</p>;
+  if (!user) return <p>User not found</p>;
 
   return (
-    <div className="d-flex justify-content-center">
-      <Col md={6}>
-        <h1>User Profile</h1>
-        <Form onSubmit={submitHandler}>
-          <Form.Group className="my-3" controlId="name">
-            <Form.Label>Name</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="email">
-            <Form.Label>Email Address</Form.Label>
-            <Form.Control
-              type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="password">
-            <Form.Label>Password</Form.Label>
-            <Form.Control
-              type="password"
-              placeholder="Enter new password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="confirmPassword">
-            <Form.Label>Confirm Password</Form.Label>
-            <Form.Control
-              type="password"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            ></Form.Control>
-          </Form.Group>
-
-          <Button type="submit" variant="primary">
-            Update Profile
-          </Button>
-        </Form>
-      </Col>
+    <div>
+      <h1>{user.name}'s Profile</h1>
+      <h2>Recipes by {user.name}</h2>
+      {recipes.length === 0 && <p>No recipes found.</p>}
+      <ul>
+        {recipes.map(recipe => (
+          <li key={recipe._id} style={{ marginBottom: '1rem' }}>
+            <Link to={`/recipes/${recipe._id}`}>
+              <h3>{recipe.title}</h3>
+            </Link>
+            <p>{recipe.description?.substring(0, 100)}...</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default ProfilePage;
