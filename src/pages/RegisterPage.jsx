@@ -11,7 +11,7 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { setAuth } = useAuth();
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -19,9 +19,10 @@ function RegisterPage() {
       toast.error('Passwords do not match');
       return;
     }
+
     try {
       const data = await authService.register(name, email, password);
-      login(data.user, data.token);
+      setAuth(data); // ✅ Set user context and localStorage
       toast.success('Registration successful!');
       navigate('/');
     } catch (error) {
@@ -41,7 +42,8 @@ function RegisterPage() {
               placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-            ></Form.Control>
+              required
+            />
           </Form.Group>
 
           <Form.Group className="my-3" controlId="email">
@@ -51,7 +53,8 @@ function RegisterPage() {
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-            ></Form.Control>
+              required
+            />
           </Form.Group>
 
           <Form.Group className="my-3" controlId="password">
@@ -61,7 +64,8 @@ function RegisterPage() {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-            ></Form.Control>
+              required
+            />
           </Form.Group>
 
           <Form.Group className="my-3" controlId="confirmPassword">
@@ -71,7 +75,8 @@ function RegisterPage() {
               placeholder="Confirm password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-            ></Form.Control>
+              required
+            />
           </Form.Group>
 
           <Button type="submit" variant="primary">
