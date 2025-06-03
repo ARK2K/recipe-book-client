@@ -13,11 +13,11 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async e => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
     try {
-      const { data } = await axios.post('/api/auth/login', form);
+      const data = await authService.login(form.email, form.password);
       localStorage.setItem('token', data.token);
       navigate('/');
     } catch (err) {
