@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recipeService from '../services/recipeService';
+import { useAuth } from '../contexts/AuthContext';
 
 function AddRecipePage() {
   const [title, setTitle] = useState('');
@@ -13,6 +14,7 @@ function AddRecipePage() {
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -26,7 +28,7 @@ function AddRecipePage() {
       const formData = new FormData();
       formData.append('image', image);
       try {
-        const uploadResponse = await recipeService.uploadRecipeImage(formData);
+        const uploadResponse = await recipeService.uploadRecipeImage(formData, user?.token);
         imageUrl = uploadResponse.imageUrl;
       } catch (uploadError) {
         toast.error(uploadError.response?.data?.message || 'Image upload failed');
@@ -44,7 +46,7 @@ function AddRecipePage() {
         category: category.trim(),
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       };
-      await recipeService.createRecipe(newRecipe);
+      await recipeService.createRecipe(newRecipe, user?.token);
       toast.success('Recipe added successfully!');
       navigate('/');
     } catch (error) {
@@ -64,7 +66,7 @@ function AddRecipePage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="description">
@@ -76,7 +78,7 @@ function AddRecipePage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="ingredients">
@@ -88,7 +90,7 @@ function AddRecipePage() {
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="instructions">
@@ -100,7 +102,7 @@ function AddRecipePage() {
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="recipeImage">
@@ -108,7 +110,7 @@ function AddRecipePage() {
           <Form.Control
             type="file"
             onChange={handleImageChange}
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="category">
@@ -118,7 +120,7 @@ function AddRecipePage() {
             placeholder="e.g., Italian, Dessert, Vegan"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="tags">
@@ -128,7 +130,7 @@ function AddRecipePage() {
             placeholder="e.g., quick, healthy, breakfast"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Button type="submit" variant="primary">

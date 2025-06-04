@@ -3,10 +3,12 @@ import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recipeService from '../services/recipeService';
+import { useAuth } from '../contexts/AuthContext';
 
 function EditRecipePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState('');
@@ -29,7 +31,7 @@ function EditRecipePage() {
         setImageUrl(data.imageUrl || '');
         setCategory(data.category || '');
         setTags(data.tags ? data.tags.join(', ') : '');
-      } catch (err) {
+      } catch {
         setError('Failed to load recipe for editing.');
         toast.error('Failed to load recipe for editing.');
       } finally {
@@ -51,7 +53,7 @@ function EditRecipePage() {
       const formData = new FormData();
       formData.append('image', image);
       try {
-        const uploadResponse = await recipeService.uploadRecipeImage(formData);
+        const uploadResponse = await recipeService.uploadRecipeImage(formData, user.token);
         newImageUrl = uploadResponse.imageUrl;
       } catch (uploadError) {
         toast.error(uploadError.response?.data?.message || 'Image upload failed');
@@ -69,7 +71,7 @@ function EditRecipePage() {
         category: category.trim(),
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       };
-      await recipeService.updateRecipe(id, updatedRecipe);
+      await recipeService.updateRecipe(id, updatedRecipe, user.token);
       toast.success('Recipe updated successfully!');
       navigate(`/recipes/${id}`);
     } catch (error) {
@@ -92,7 +94,7 @@ function EditRecipePage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="description">
@@ -104,7 +106,7 @@ function EditRecipePage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="ingredients">
@@ -116,7 +118,7 @@ function EditRecipePage() {
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="instructions">
@@ -128,15 +130,12 @@ function EditRecipePage() {
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             required
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="recipeImage">
           <Form.Label>Recipe Image</Form.Label>
-          <Form.Control
-            type="file"
-            onChange={handleImageChange}
-          ></Form.Control>
+          <Form.Control type="file" onChange={handleImageChange} />
           {imageUrl && (
             <div className="mt-2">
               <img src={imageUrl} alt="Current Recipe" style={{ maxWidth: '200px', height: 'auto' }} />
@@ -151,7 +150,7 @@ function EditRecipePage() {
             placeholder="e.g., Italian, Dessert, Vegan"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="tags">
@@ -161,7 +160,7 @@ function EditRecipePage() {
             placeholder="e.g., quick, healthy, breakfast"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-          ></Form.Control>
+          />
         </Form.Group>
 
         <Button type="submit" variant="primary">
