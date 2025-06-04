@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
+import axiosInstance from '../utils/axiosInstance';
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -12,15 +12,18 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const { data } = await axios.get(`/api/users/${username}`);
+        const { data } = await axiosInstance.get(`/api/users/${username}`);
         setUser(data.user);
         setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
-      } catch {
+        console.log('User profile:', data); // ✅ Debug log
+      } catch (err) {
+        console.error('Profile fetch error:', err); // ✅ Better error log
         setError('Failed to load profile');
       } finally {
         setLoading(false);
       }
     };
+
     fetchUserProfile();
   }, [username]);
 
@@ -32,17 +35,20 @@ const ProfilePage = () => {
     <div>
       <h1>{user.name}'s Profile</h1>
       <h2>Recipes by {user.name}</h2>
-      {recipes.length === 0 && <p>No recipes found.</p>}
-      <ul>
-        {recipes.map(recipe => (
-          <li key={recipe._id} style={{ marginBottom: '1rem' }}>
-            <Link to={`/recipes/${recipe._id}`}>
-              <h3>{recipe.title}</h3>
-            </Link>
-            <p>{recipe.description?.substring(0, 100)}...</p>
-          </li>
-        ))}
-      </ul>
+      {recipes.length === 0 ? (
+        <p>No recipes found.</p>
+      ) : (
+        <ul>
+          {recipes.map(recipe => (
+            <li key={recipe._id} style={{ marginBottom: '1rem' }}>
+              <Link to={`/recipes/${recipe._id}`}>
+                <h3>{recipe.title}</h3>
+              </Link>
+              <p>{recipe.description?.substring(0, 100)}...</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

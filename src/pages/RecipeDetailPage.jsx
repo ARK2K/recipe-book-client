@@ -50,10 +50,16 @@ function RecipeDetailPage() {
         Go Back
       </Button>
       <Card>
-        {recipe.imageUrl && <Card.Img variant="top" src={recipe.imageUrl} alt={recipe.title} />}
+        {recipe.imageUrl && (
+          <Card.Img variant="top" src={recipe.imageUrl} alt={recipe.title} />
+        )}
         <Card.Body>
           <Card.Title>{recipe.title}</Card.Title>
+          {recipe.creatorName && (
+            <Card.Subtitle className="mb-2 text-muted">By {recipe.creatorName}</Card.Subtitle>
+          )}
           <Card.Text>{recipe.description}</Card.Text>
+
           <ListGroup variant="flush">
             <ListGroup.Item>
               <strong>Ingredients:</strong>
@@ -78,9 +84,14 @@ function RecipeDetailPage() {
               </ListGroup.Item>
             )}
           </ListGroup>
+
           {user && recipe.user === user._id && (
             <div className="mt-3">
-              <Button variant="info" onClick={() => navigate(`/recipes/${recipe._id}/edit`)} className="me-2">
+              <Button
+                variant="info"
+                onClick={() => navigate(`/recipes/${recipe._id}/edit`)}
+                className="me-2"
+              >
                 Edit Recipe
               </Button>
               <Button variant="danger" onClick={handleDelete}>
