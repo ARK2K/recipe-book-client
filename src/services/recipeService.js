@@ -1,5 +1,10 @@
 import axiosInstance from '../utils/axiosInstance';
 
+const getAuthHeader = () => {
+  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  return userInfo?.token ? { Authorization: `Bearer ${userInfo.token}` } : {};
+};
+
 const recipeService = {
   getAllRecipes: async () => {
     const response = await axiosInstance.get('/api/recipes');
@@ -11,38 +16,32 @@ const recipeService = {
     return response.data;
   },
 
-  createRecipe: async (recipeData, token) => {
+  createRecipe: async (recipeData) => {
     const response = await axiosInstance.post('/api/recipes', recipeData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeader(),
     });
     return response.data;
   },
 
-  updateRecipe: async (id, recipeData, token) => {
+  updateRecipe: async (id, recipeData) => {
     const response = await axiosInstance.put(`/api/recipes/${id}`, recipeData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeader(),
     });
     return response.data;
   },
 
-  deleteRecipe: async (id, token) => {
+  deleteRecipe: async (id) => {
     const response = await axiosInstance.delete(`/api/recipes/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeader(),
     });
     return response.data;
   },
 
-  uploadRecipeImage: async (imageData, token) => {
+  uploadRecipeImage: async (imageData) => {
     const response = await axiosInstance.post('/api/recipes/upload', imageData, {
       headers: {
+        ...getAuthHeader(),
         'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;

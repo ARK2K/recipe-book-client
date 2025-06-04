@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosInstance';
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
@@ -18,17 +18,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const config = { headers: { 'Content-Type': 'application/json' } };
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_BASE}/api/auth/login`,
-        { email, password },
-        config
-      );
+      const { data } = await axiosInstance.post('/api/auth/login', {
+        email,
+        password,
+      });
       localStorage.setItem('userInfo', JSON.stringify(data));
       setUser(data);
       toast.success('Logged in successfully!');
       return true;
     } catch (error) {
+      console.error('Login error:', error.response || error.message);
       toast.error(error.response?.data?.message || 'Login failed');
       return false;
     }

@@ -1,27 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext'; // ensure this path is correct
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // <-- using context instead of authService
 
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async e => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const data = await authService.login(form.email, form.password);
-      localStorage.setItem('token', data.token);
-      navigate('/');
+      const success = await login(form.email, form.password);
+      if (success) {
+        navigate('/');
+      } else {
+        setError('Invalid email or password');
+        console.log('Login failed: Invalid email or password');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const message = err.response?.data?.message || 'Login failed';
+      setError(message);
+      console.log('Login error:', message);
     } finally {
       setLoading(false);
     }

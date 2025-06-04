@@ -1,26 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Container } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Container, Form, Button, Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 
 function EditRecipePage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
   const [image, setImage] = useState(null);
-  const [imageUrl, setImageUrl] = useState('');
+  const [existingImageUrl, setExistingImageUrl] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [creatorName, setCreatorName] = useState('');
+
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) {
+      toast.warning('Please log in to access this page');
+      navigate('/login');
+      return;
+    }
+
     const fetchRecipe = async () => {
       try {
         const data = await recipeService.getRecipeById(id);
@@ -28,18 +35,24 @@ function EditRecipePage() {
         setDescription(data.description);
         setIngredients(data.ingredients.join('\n'));
         setInstructions(data.instructions);
-        setImageUrl(data.imageUrl || '');
+        setExistingImageUrl(data.imageUrl || '');
         setCategory(data.category || '');
-        setTags(data.tags ? data.tags.join(', ') : '');
-      } catch {
-        setError('Failed to load recipe for editing.');
-        toast.error('Failed to load recipe for editing.');
-      } finally {
+        setTags((data.tags || []).join(', '));
+        setCreatorName(data.creatorName || '');
         setLoading(false);
+
+        if (data.creatorName !== user.name) {
+          toast.error('You are not authorized to edit this recipe.');
+          navigate('/');
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to fetch recipe');
+        navigate('/');
       }
     };
+
     fetchRecipe();
-  }, [id]);
+  }, [id, user, navigate]);
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -48,13 +61,18 @@ function EditRecipePage() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    let newImageUrl = imageUrl;
+    if (!user?.token) {
+      toast.error('Not authorized. Please log in again.');
+      return;
+    }
+
+    let imageUrl = existingImageUrl;
     if (image) {
       const formData = new FormData();
       formData.append('image', image);
       try {
         const uploadResponse = await recipeService.uploadRecipeImage(formData, user.token);
-        newImageUrl = uploadResponse.imageUrl;
+        imageUrl = uploadResponse.imageUrl;
       } catch (uploadError) {
         toast.error(uploadError.response?.data?.message || 'Image upload failed');
         return;
@@ -67,20 +85,25 @@ function EditRecipePage() {
         description,
         ingredients: ingredients.split('\n').map(item => item.trim()).filter(item => item),
         instructions,
-        imageUrl: newImageUrl,
+        imageUrl,
         category: category.trim(),
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       };
       await recipeService.updateRecipe(id, updatedRecipe, user.token);
       toast.success('Recipe updated successfully!');
-      navigate(`/recipes/${id}`);
+      navigate('/');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update recipe');
     }
   };
 
-  if (loading) return <Container>Loading recipe for editing...</Container>;
-  if (error) return <Container>Error: {error}</Container>;
+  if (loading) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" />
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -90,7 +113,6 @@ function EditRecipePage() {
           <Form.Label>Title</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter recipe title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -102,7 +124,6 @@ function EditRecipePage() {
           <Form.Control
             as="textarea"
             rows={3}
-            placeholder="Describe your recipe"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
@@ -114,7 +135,6 @@ function EditRecipePage() {
           <Form.Control
             as="textarea"
             rows={5}
-            placeholder="Enter each ingredient on a new line"
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
             required
@@ -126,28 +146,34 @@ function EditRecipePage() {
           <Form.Control
             as="textarea"
             rows={7}
-            placeholder="Provide step-by-step instructions"
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
             required
           />
         </Form.Group>
 
-        <Form.Group className="mb-3" controlId="recipeImage">
-          <Form.Label>Recipe Image</Form.Label>
-          <Form.Control type="file" onChange={handleImageChange} />
-          {imageUrl && (
-            <div className="mt-2">
-              <img src={imageUrl} alt="Current Recipe" style={{ maxWidth: '200px', height: 'auto' }} />
+        {existingImageUrl && (
+          <div className="mb-3">
+            <Form.Label>Current Image</Form.Label>
+            <div>
+              <img
+                src={existingImageUrl}
+                alt="Current"
+                style={{ width: '200px', borderRadius: '5px' }}
+              />
             </div>
-          )}
+          </div>
+        )}
+
+        <Form.Group className="mb-3" controlId="recipeImage">
+          <Form.Label>Change Recipe Image</Form.Label>
+          <Form.Control type="file" onChange={handleImageChange} />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="category">
           <Form.Label>Category (Optional)</Form.Label>
           <Form.Control
             type="text"
-            placeholder="e.g., Italian, Dessert, Vegan"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
@@ -157,7 +183,6 @@ function EditRecipePage() {
           <Form.Label>Tags (Comma-separated, Optional)</Form.Label>
           <Form.Control
             type="text"
-            placeholder="e.g., quick, healthy, breakfast"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
