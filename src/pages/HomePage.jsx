@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; 
 import { Link } from 'react-router-dom';
-import { Card, Row, Col, Container, Spinner } from 'react-bootstrap';
-import axios from 'axios';
+import { Card, Button, Row, Col } from 'react-bootstrap';
+import axiosInstance from '../utils/axiosInstance';
 
-const HomePage = () => {
+const Homepage = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,12 +11,11 @@ const HomePage = () => {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const { data } = await axios.get('https://recipe-book-server-5u08.onrender.com/api/recipes');
-        console.log('Fetched recipes:', data);
+        const { data } = await axiosInstance.get('/api/recipes');
+        console.log("Fetched recipes:", data);
         setRecipes(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch {
         setError('Failed to load recipes');
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -24,48 +23,43 @@ const HomePage = () => {
     fetchRecipes();
   }, []);
 
-  if (loading) return <Container className="text-center mt-5"><Spinner animation="border" /></Container>;
-  if (error) return <Container className="text-danger mt-5">{error}</Container>;
+  if (loading) return <p>Loading recipes...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <Container className="my-4">
-      <h1 className="mb-4">Recipe Book</h1>
-      <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+    <div>
+      <h1>Recipe Book</h1>
+      <Row>
         {recipes.map(recipe => (
-          <Col key={recipe._id}>
-            <Card className="h-100">
-              {recipe.image && (
-                <Card.Img
-                  variant="top"
-                  src={recipe.image}
-                  alt={recipe.title}
-                  style={{ height: '200px', objectFit: 'cover' }}
-                />
-              )}
+          <Col key={recipe._id} md={4} className="mb-4">
+            <Card>
+              {recipe.image && <Card.Img variant="top" src={recipe.image} alt={recipe.title} />}
               <Card.Body>
                 <Card.Title>{recipe.title}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
-                  {recipe.creatorName ? `By ${recipe.creatorName}` : ''}
-                </Card.Subtitle>
+                {recipe.user && (
+                  <Card.Subtitle className="mb-2 text-muted">
+                    Creator: {recipe.creatorName || 'Unknown'}
+                  </Card.Subtitle>
+                )}
+                <Card.Text>{recipe.description}</Card.Text>
+                {recipe.averageRating > 0 && (
+                  <Card.Text>
+                    <strong>Rating:</strong> {recipe.averageRating} ({recipe.numReviews} reviews)
+                  </Card.Text>
+                )}
                 <Card.Text>
-                  {recipe.description?.substring(0, 100)}...
+                  <small>Created on: {new Date(recipe.createdAt).toLocaleDateString()}</small>
                 </Card.Text>
+                <Button variant="primary" as={Link} to={`/recipes/${recipe._id}`}>
+                  View Recipe
+                </Button>
               </Card.Body>
-              <Card.Footer className="d-flex justify-content-between align-items-center">
-                <small className="text-muted">
-                  {new Date(recipe.createdAt).toLocaleDateString()}
-                </small>
-                <small className="text-muted">
-                  ⭐ {recipe.averageRating?.toFixed(1) || 0}
-                </small>
-              </Card.Footer>
-              <Link to={`/recipes/${recipe._id}`} className="stretched-link"></Link>
             </Card>
           </Col>
         ))}
       </Row>
-    </Container>
+    </div>
   );
 };
 
-export default HomePage;
+export default Homepage;

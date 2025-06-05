@@ -50,8 +50,8 @@ function RecipeDetailPage() {
         Go Back
       </Button>
       <Card>
-        {recipe.imageUrl && (
-          <Card.Img variant="top" src={recipe.imageUrl} alt={recipe.title} />
+        {recipe.image && (
+          <Card.Img variant="top" src={recipe.image} alt={recipe.title} />
         )}
         <Card.Body>
           <Card.Title>{recipe.title}</Card.Title>

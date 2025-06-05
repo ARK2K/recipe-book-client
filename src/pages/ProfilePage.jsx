@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 
 const ProfilePage = () => {
-  const { username } = useParams();
   const [user, setUser] = useState(null);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,12 +11,12 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const { data } = await axiosInstance.get(`/api/users/${username}`);
+        const { data } = await axiosInstance.get('/api/users/me');
         setUser(data.user);
         setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
-        console.log('User profile:', data); // ✅ Debug log
+        console.log('Fetched profile:', data);
       } catch (err) {
-        console.error('Profile fetch error:', err); // ✅ Better error log
+        console.error('Profile fetch error:', err);
         setError('Failed to load profile');
       } finally {
         setLoading(false);
@@ -25,7 +24,7 @@ const ProfilePage = () => {
     };
 
     fetchUserProfile();
-  }, [username]);
+  }, []);
 
   if (loading) return <p>Loading profile...</p>;
   if (error) return <p>{error}</p>;
