@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -10,9 +11,9 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const { data } = await axiosInstance.get('/api/users/me');
+        const { data } = await axiosInstance.get('/api/auth/profile'); // ✅ Corrected route
         setUser(data);
-        setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
+        setRecipes(data.recipes || []); // If you're returning recipes with profile
       } catch (err) {
         console.error('Profile fetch error:', err);
         setError('Failed to load profile');
@@ -37,8 +38,10 @@ const ProfilePage = () => {
       ) : (
         <ul>
           {recipes.map(recipe => (
-            <li key={recipe._id}>
-              <h3>{recipe.title}</h3>
+            <li key={recipe._id} style={{ marginBottom: '1rem' }}>
+              <Link to={`/recipes/${recipe._id}`}>
+                <h3>{recipe.title}</h3>
+              </Link>
               <p>{recipe.description?.substring(0, 100)}...</p>
             </li>
           ))}

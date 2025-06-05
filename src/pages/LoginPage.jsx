@@ -1,39 +1,38 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // ensure this path is correct
+import axiosInstance from '../utils/axiosInstance';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); // <-- using context instead of authService
+  const { login } = useAuth();
 
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async e => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const success = await login(form.email, form.password);
-      if (success) {
-        navigate('/');
-      } else {
-        setError('Invalid email or password');
-        console.log('Login failed: Invalid email or password');
-      }
-    } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
-      setError(message);
-      console.log('Login error:', message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const { data } = await axiosInstance.post('/api/auth/login', form); // Use correct route!
+    console.log('✅ Login response:', data); // Should contain token
+
+    login(data); // Must include token, email, name, _id
+    navigate('/');
+  } catch (err) {
+    const message = err.response?.data?.message || 'Login failed';
+    setError(message);
+    console.log('Login error:', message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="login-page">
