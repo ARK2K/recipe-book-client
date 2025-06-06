@@ -1,52 +1,40 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
-import { Link } from 'react-router-dom';
+import RecipeCard from '../components/RecipeCard';
 
 const ProfilePage = () => {
-  const [user, setUser] = useState(null);
-  const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [myRecipes, setMyRecipes] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchMyRecipes = async () => {
       try {
-        const { data } = await axiosInstance.get('/api/auth/profile'); // ✅ Corrected route
-        setUser(data);
-        setRecipes(data.recipes || []); // If you're returning recipes with profile
+        const res = await axiosInstance.get('/api/recipes/my-recipes');
+        setMyRecipes(res.data);
       } catch (err) {
-        console.error('Profile fetch error:', err);
-        setError('Failed to load profile');
-      } finally {
-        setLoading(false);
+        console.error('❌ Failed to load your recipes:', err);
+        setError(err.response?.data?.message || 'Something went wrong');
       }
     };
 
-    fetchUserProfile();
+    fetchMyRecipes();
   }, []);
 
-  if (loading) return <p>Loading profile...</p>;
-  if (error) return <p>{error}</p>;
-  if (!user) return <p>User not found</p>;
-
   return (
-    <div>
-      <h1>{user.name}'s Profile</h1>
-      <h2>Recipes by {user.name}</h2>
-      {recipes.length === 0 ? (
-        <p>No recipes found.</p>
-      ) : (
-        <ul>
-          {recipes.map(recipe => (
-            <li key={recipe._id} style={{ marginBottom: '1rem' }}>
-              <Link to={`/recipes/${recipe._id}`}>
-                <h3>{recipe.title}</h3>
-              </Link>
-              <p>{recipe.description?.substring(0, 100)}...</p>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="container mt-4">
+      <h2 className="mb-3">Your Recipes</h2>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <div className="row">
+        {myRecipes.length > 0 ? (
+          myRecipes.map((recipe) => (
+            <div key={recipe._id} className="col-md-4">
+              <RecipeCard recipe={recipe} />
+            </div>
+          ))
+        ) : (
+          <p>No recipes found.</p>
+        )}
+      </div>
     </div>
   );
 };
