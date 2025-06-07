@@ -85,7 +85,7 @@ function RecipeDetailPage() {
             )}
           </ListGroup>
 
-          {user && recipe.user === user._id && (
+          {user?.name === recipe?.creatorName && (
             <div className="mt-3">
               <Button
                 variant="info"

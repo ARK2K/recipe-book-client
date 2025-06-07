@@ -15,24 +15,24 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async e => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  try {
-    const { data } = await axiosInstance.post('/api/auth/login', form); // Use correct route!
-    console.log('✅ Login response:', data); // Should contain token
+    try {
+      const { data } = await axiosInstance.post('/api/users/login', form); // ✅ Corrected path
+      console.log('✅ Login response:', data);
 
-    login(data); // Must include token, email, name, _id
-    navigate('/');
-  } catch (err) {
-    const message = err.response?.data?.message || 'Login failed';
-    setError(message);
-    console.log('Login error:', message);
-  } finally {
-    setLoading(false);
-  }
-};
+      login(data); // Store user data in context/localStorage
+      navigate('/');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Login failed';
+      setError(message);
+      console.log('Login error:', message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-page">
