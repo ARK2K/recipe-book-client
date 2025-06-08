@@ -37,10 +37,12 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
-            <Route path="/recipes/new" element={<PrivateRoute element={<AddRecipePage />} />} />
-            <Route path="/recipes/:id/edit" element={<PrivateRoute element={<EditRecipePage />} />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/recipes/new" element={<AddRecipePage />} />
+              <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
+            </Route>
           </Routes>
         </div>
       </main>

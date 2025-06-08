@@ -7,31 +7,39 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [loading, setLoading] = useState(true); // Waits during token check/refresh
 
   useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser({ _id: decoded.id });
+    const checkToken = async () => {
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          const isExpired = decoded.exp * 1000 < Date.now();
 
-        const isExpired = decoded.exp * 1000 < Date.now();
-        if (isExpired) refreshToken();
-      } catch (err) {
-        console.error('Token error:', err);
-        logout();
+          if (isExpired) {
+            await refreshToken();
+          } else {
+            setUser({ _id: decoded.id });
+          }
+        } catch (err) {
+          console.error('Token error:', err);
+          logout();
+        }
       }
-    }
+      setLoading(false);
+    };
+
+    checkToken();
   }, [token]);
 
   const refreshToken = async () => {
     try {
-      const { data } = await axiosInstance.get('/api/auth/refresh', {
-        withCredentials: true,
-      });
+      const { data } = await axiosInstance.get('/auth/refresh'); // Sends cookie
       setToken(data.token);
       localStorage.setItem('token', data.token);
       setUser({ _id: jwtDecode(data.token).id });
     } catch (err) {
+      console.error('Refresh failed:', err);
       logout();
     }
   };
@@ -46,11 +54,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken('');
     setUser(null);
-    axiosInstance.get('/api/auth/logout', { withCredentials: true });
+    axiosInstance.get('/auth/logout');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

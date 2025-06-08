@@ -1,8 +1,8 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Spinner } from 'react-bootstrap';
 
-const PrivateRoute = ({ element }) => {
+const PrivateRoute = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -13,7 +13,7 @@ const PrivateRoute = ({ element }) => {
     );
   }
 
-  return user ? element : <Navigate to="/login" replace />;
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;
