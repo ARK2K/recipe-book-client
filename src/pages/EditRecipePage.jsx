@@ -61,17 +61,12 @@ function EditRecipePage() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    if (!user?.token) {
-      toast.error('Not authorized. Please log in again.');
-      return;
-    }
-
     let imageUrl = existingImageUrl;
     if (image) {
       const formData = new FormData();
       formData.append('image', image);
       try {
-        const uploadResponse = await recipeService.uploadRecipeImage(formData, user.token);
+        const uploadResponse = await recipeService.uploadRecipeImage(formData);
         imageUrl = uploadResponse.imageUrl;
       } catch (uploadError) {
         toast.error(uploadError.response?.data?.message || 'Image upload failed');
@@ -89,7 +84,8 @@ function EditRecipePage() {
         category: category.trim(),
         tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       };
-      await recipeService.updateRecipe(id, updatedRecipe, user.token);
+
+      await recipeService.updateRecipe(id, updatedRecipe); // ✅ No token passed manually
       toast.success('Recipe updated successfully!');
       navigate('/');
     } catch (error) {

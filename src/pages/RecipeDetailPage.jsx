@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, ListGroup, Container } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -85,7 +85,7 @@ function RecipeDetailPage() {
             )}
           </ListGroup>
 
-          {user?.name === recipe?.creatorName && (
+          {user?._id === recipe?.creator && (
             <div className="mt-3">
               <Button
                 variant="info"
