@@ -5,7 +5,13 @@ const RecipeCard = ({ recipe }) => {
   return (
     <Card className="my-3 p-3 rounded">
       <Link to={`/recipes/${recipe._id}`}>
-        <Card.Img src={recipe.image} variant="top" style={{ height: '200px', objectFit: 'cover' }} />
+        {recipe.imageUrl ? (
+          <Card.Img
+            src={recipe.imageUrl}
+            variant="top"
+            style={{ height: '200px', objectFit: 'cover' }}
+          />
+        ) : null}
       </Link>
       <Card.Body>
         <Link to={`/recipes/${recipe._id}`}>
