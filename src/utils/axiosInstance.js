@@ -21,4 +21,34 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// === NEW CODE to auto-refresh token ===
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/refresh`, {
+          withCredentials: true,
+        });
+        const newToken = res.data.token;
+        localStorage.setItem('token', newToken);
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

@@ -19,9 +19,11 @@ function EditRecipePage() {
 
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       toast.warning('Please log in to access this page');
       navigate('/login');
@@ -52,7 +54,7 @@ function EditRecipePage() {
     };
 
     fetchRecipe();
-  }, [id, user, navigate]);
+  }, [id, user, authLoading, navigate]);
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -60,11 +62,6 @@ function EditRecipePage() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-
-    if (!user?.token) {
-      toast.error('Not authorized. Please log in again.');
-      return;
-    }
 
     let imageUrl = existingImageUrl;
     if (image) {
@@ -97,7 +94,7 @@ function EditRecipePage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />

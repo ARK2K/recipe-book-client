@@ -41,7 +41,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/recipes/new" element={<AddRecipePage />} />
-              <Route path="/recipes/:id/edit" element={<EditRecipePage />} />
+              <Route path="/edit/:id" element={<EditRecipePage />} />
             </Route>
           </Routes>
         </div>
