@@ -14,8 +14,8 @@ function EditRecipePage() {
   const [existingImageUrl, setExistingImageUrl] = useState('');
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState('');
+  const [creatorId, setCreatorId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [creatorName, setCreatorName] = useState('');
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -38,10 +38,10 @@ function EditRecipePage() {
         setExistingImageUrl(data.imageUrl || '');
         setCategory(data.category || '');
         setTags((data.tags || []).join(', '));
-        setCreatorName(data.creatorName || '');
+        setCreatorId(data.creatorId);
         setLoading(false);
 
-        if (data.creatorName !== user.name) {
+        if (data.creatorId !== user._id) {
           toast.error('You are not authorized to edit this recipe.');
           navigate('/');
         }
@@ -61,6 +61,11 @@ function EditRecipePage() {
   const submitHandler = async (e) => {
     e.preventDefault();
 
+    if (!user?.token) {
+      toast.error('Not authorized. Please log in again.');
+      return;
+    }
+
     let imageUrl = existingImageUrl;
     if (image) {
       const formData = new FormData();
@@ -78,14 +83,13 @@ function EditRecipePage() {
       const updatedRecipe = {
         title,
         description,
-        ingredients: ingredients.split('\n').map(item => item.trim()).filter(item => item),
+        ingredients: ingredients.split('\n').map(item => item.trim()).filter(Boolean),
         instructions,
         imageUrl,
         category: category.trim(),
-        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
       };
-
-      await recipeService.updateRecipe(id, updatedRecipe); // ✅ No token passed manually
+      await recipeService.updateRecipe(id, updatedRecipe);
       toast.success('Recipe updated successfully!');
       navigate('/');
     } catch (error) {
