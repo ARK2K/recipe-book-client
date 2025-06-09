@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [loading, setLoading] = useState(true); // Waits during token check/refresh
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkToken = async () => {
@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }) => {
             setUser({ _id: decoded.id });
           }
         } catch (err) {
-          console.error('Token error:', err);
           logout();
         }
       }
@@ -34,12 +33,13 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      const { data } = await axiosInstance.get('/auth/refresh'); // Sends cookie
+      const { data } = await axiosInstance.get('/api/users/refresh', {
+        withCredentials: true
+      });
       setToken(data.token);
       localStorage.setItem('token', data.token);
       setUser({ _id: jwtDecode(data.token).id });
     } catch (err) {
-      console.error('Refresh failed:', err);
       logout();
     }
   };
@@ -50,11 +50,15 @@ export const AuthProvider = ({ children }) => {
     setUser({ _id: userData._id, name: userData.name });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await axiosInstance.get('/api/users/logout', {
+        withCredentials: true
+      });
+    } catch (err) {}
     localStorage.removeItem('token');
     setToken('');
     setUser(null);
-    axiosInstance.get('/auth/logout');
   };
 
   return (
