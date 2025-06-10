@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Container, Spinner, Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import recipeService from '../services/recipeService';
@@ -8,10 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingRecipe, setLoadingRecipe] = useState(true);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -22,12 +22,14 @@ const RecipeDetailPage = () => {
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
       } finally {
-        setLoading(false);
+        setLoadingRecipe(false);
       }
     };
 
-    fetchRecipe();
-  }, [id, navigate]);
+    if (user) {
+      fetchRecipe();
+    }
+  }, [id, user, navigate]);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
@@ -42,6 +44,18 @@ const RecipeDetailPage = () => {
   };
 
   if (loading) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" />
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (loadingRecipe) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
