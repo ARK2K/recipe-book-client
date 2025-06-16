@@ -1,22 +1,30 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
-import { Form, Row, Col } from 'react-bootstrap';
+import { Form, Row, Col, Nav } from 'react-bootstrap';
+import { useSearchParams } from 'react-router-dom';
 
 const ProfilePage = () => {
   const [myRecipes, setMyRecipes] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const [activeTab, setActiveTab] = useState('my');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterTag, setFilterTag] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const fetchMyRecipes = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axiosInstance.get('/api/recipes/my-recipes');
-        setMyRecipes(res.data);
-        setFiltered(res.data);
+        const [myRes, favRes] = await Promise.all([
+          axiosInstance.get('/api/recipes/my-recipes'),
+          axiosInstance.get('/api/users/favorites'),
+        ]);
+        setMyRecipes(myRes.data);
+        setFavorites(favRes.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Something went wrong');
       } finally {
@@ -24,36 +32,75 @@ const ProfilePage = () => {
       }
     };
 
-    fetchMyRecipes();
+    fetchData();
   }, []);
 
   useEffect(() => {
-    let filtered = [...myRecipes];
+    const tagParam = searchParams.get('tag') || '';
+    const categoryParam = searchParams.get('category') || '';
+    setFilterTag(tagParam);
+    setFilterCategory(categoryParam);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const data = activeTab === 'my' ? myRecipes : favorites;
+    let filteredData = [...data];
+
     if (filterCategory)
-      filtered = filtered.filter(r => r.category?.toLowerCase().includes(filterCategory.toLowerCase()));
+      filteredData = filteredData.filter(r =>
+        r.category?.toLowerCase().includes(filterCategory.toLowerCase())
+      );
+
     if (filterTag)
-      filtered = filtered.filter(r => r.tags?.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase())));
-    setFiltered(filtered);
-  }, [filterCategory, filterTag, myRecipes]);
+      filteredData = filteredData.filter(r =>
+        r.tags?.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase()))
+      );
+
+    if (sortBy === 'newest') {
+      filteredData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === 'oldest') {
+      filteredData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === 'rating') {
+      filteredData.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
+    }
+
+    setFiltered(filteredData);
+  }, [filterCategory, filterTag, sortBy, activeTab, myRecipes, favorites]);
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-3">Your Recipes</h2>
+      <h2 className="mb-3">Profile</h2>
 
-      <Row className="mb-3">
+      <Nav variant="tabs" activeKey={activeTab} onSelect={k => setActiveTab(k)}>
+        <Nav.Item>
+          <Nav.Link eventKey="my">Your Recipes</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="favorites">Favorites</Nav.Link>
+        </Nav.Item>
+      </Nav>
+
+      <Row className="my-3">
         <Col md={4}>
           <Form.Control
             placeholder="Filter by Category"
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+            onChange={e => setFilterCategory(e.target.value)}
           />
         </Col>
         <Col md={4}>
           <Form.Control
             placeholder="Filter by Tag"
             value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
+            onChange={e => setFilterTag(e.target.value)}
           />
+        </Col>
+        <Col md={4}>
+          <Form.Select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="rating">Top Rated</option>
+          </Form.Select>
         </Col>
       </Row>
 
@@ -62,13 +109,13 @@ const ProfilePage = () => {
       ) : error ? (
         <div className="alert alert-danger">{error}</div>
       ) : filtered.length > 0 ? (
-        <div className="row">
-          {filtered.map((recipe) => (
-            <div key={recipe._id} className="col-md-4">
+        <Row>
+          {filtered.map(recipe => (
+            <Col key={recipe._id} md={4} className="mb-4">
               <RecipeCard recipe={recipe} />
-            </div>
+            </Col>
           ))}
-        </div>
+        </Row>
       ) : (
         <p>No recipes found.</p>
       )}
