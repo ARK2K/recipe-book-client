@@ -8,14 +8,18 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('newest');
-  const [filter, setFilter] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [filterType, setFilterType] = useState('ingredient');
 
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const { data } = await axiosInstance.get('/api/recipes', {
-          params: { sort: sortBy, ingredient: filter }
-        });
+        const params = { sort: sortBy };
+        if (searchText) {
+          params[filterType] = searchText;
+        }
+
+        const { data } = await axiosInstance.get('/api/recipes', { params });
         setRecipes(Array.isArray(data) ? data : []);
       } catch {
         setError('Failed to load recipes');
@@ -23,8 +27,9 @@ const Homepage = () => {
         setLoading(false);
       }
     };
+
     fetchRecipes();
-  }, [sortBy, filter]);
+  }, [sortBy, searchText, filterType]);
 
   if (loading) return <p>Loading recipes...</p>;
   if (error) return <p>{error}</p>;
@@ -41,26 +46,33 @@ const Homepage = () => {
             <option value="rating">Top Rated</option>
           </Form.Select>
         </Col>
-        <Col md={5}>
+        <Col md={3}>
+          <Form.Select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <option value="ingredient">By Ingredient</option>
+            <option value="tag">By Tag</option>
+            <option value="category">By Category</option>
+          </Form.Select>
+        </Col>
+        <Col md={6}>
           <Form.Control
             type="text"
-            placeholder="Filter by ingredient"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            placeholder={`Filter by ${filterType}`}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
         </Col>
       </Row>
 
       <Row>
-        {recipes.map(recipe => (
+        {recipes.map((recipe) => (
           <Col key={recipe._id} md={4} className="mb-4">
             <Card>
               {recipe.image && <Card.Img variant="top" src={recipe.image} alt={recipe.title} />}
               <Card.Body>
                 <Card.Title>{recipe.title}</Card.Title>
-                {recipe.user && (
+                {recipe.creatorName && (
                   <Card.Subtitle className="mb-2 text-muted">
-                    Creator: {recipe.creatorName || 'Unknown'}
+                    Creator: {recipe.creatorName}
                   </Card.Subtitle>
                 )}
                 <Card.Text>{recipe.description}</Card.Text>
