@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
-import { Container, Spinner, Button } from 'react-bootstrap';
+import { Container, Spinner, Button, Form } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,12 +12,16 @@ const RecipeDetailPage = () => {
 
   const [recipe, setRecipe] = useState(null);
   const [loadingRecipe, setLoadingRecipe] = useState(true);
+  const [comment, setComment] = useState('');
+  const [rating, setRating] = useState(0);
+  const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const data = await recipeService.getRecipeById(id);
         setRecipe(data);
+        setFavorite(data.favorites?.includes(user._id));
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
@@ -40,6 +44,39 @@ const RecipeDetailPage = () => {
       navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete recipe');
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    try {
+      await recipeService.toggleFavorite(id);
+      setFavorite((prev) => !prev);
+      toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
+    } catch (err) {
+      toast.error('Failed to toggle favorite');
+    }
+  };
+
+  const handleRatingSubmit = async () => {
+    try {
+      await recipeService.submitRating(id, rating);
+      toast.success('Rating submitted!');
+    } catch (err) {
+      toast.error('Failed to submit rating');
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await recipeService.submitComment(id, { text: comment, stars: rating });
+      toast.success('Comment added!');
+      setComment('');
+      setRating(0);
+      const updatedRecipe = await recipeService.getRecipeById(id);
+      setRecipe(updatedRecipe);
+    } catch (err) {
+      toast.error('Failed to submit comment');
     }
   };
 
@@ -85,15 +122,62 @@ const RecipeDetailPage = () => {
       </ul>
       <p><strong>Instructions:</strong></p>
       <p>{recipe.instructions}</p>
-
       {recipe.imageUrl && (
         <div className="mb-3">
           <img src={recipe.imageUrl} alt="Recipe" style={{ maxWidth: '100%', borderRadius: '8px' }} />
         </div>
       )}
-
+      <div className="mb-3">
+        <strong>Average Rating:</strong> {recipe.averageRating?.toFixed(1) || 0} ({recipe.numReviews || 0} reviews)
+      </div>
+      <div className="mb-3">
+        <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
+          {favorite ? 'Unfavorite' : 'Favorite'}
+        </Button>
+      </div>
+      <Form onSubmit={handleCommentSubmit}>
+        <Form.Group className="mb-2">
+          <Form.Label>Your Rating:</Form.Label>
+          <div>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Button
+                key={star}
+                variant={rating >= star ? 'warning' : 'outline-secondary'}
+                size="sm"
+                onClick={() => setRating(star)}
+                className="me-1"
+              >
+                ★
+              </Button>
+            ))}
+          </div>
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Control
+            as="textarea"
+            rows={2}
+            placeholder="Leave a comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            required
+          />
+        </Form.Group>
+        <Button type="submit" variant="primary">Submit</Button>
+      </Form>
+      <div className="mt-4">
+        <h5>Comments</h5>
+        {recipe.comments && recipe.comments.length > 0 ? (
+          recipe.comments.map((c, idx) => (
+            <div key={idx} className="mb-2">
+              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.text} ({c.stars} ★)
+            </div>
+          ))
+        ) : (
+          <p>No comments yet.</p>
+        )}
+      </div>
       {user && recipe.creatorId === user._id && (
-        <div className="mt-3">
+        <div className="mt-4">
           <Link to={`/edit/${recipe._id}`} className="btn btn-warning me-2">Edit</Link>
           <Button variant="danger" onClick={handleDelete}>Delete</Button>
         </div>
