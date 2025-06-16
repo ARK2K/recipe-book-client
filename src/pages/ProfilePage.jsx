@@ -1,87 +1,77 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
-import { Button, Form, Row, Col } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 
 const ProfilePage = () => {
   const [myRecipes, setMyRecipes] = useState([]);
-  const [favorites, setFavorites] = useState([]);
-  const [filter, setFilter] = useState('');
-  const [activeTab, setActiveTab] = useState('your');
-  const [loading, setLoading] = useState(true);
+  const [filtered, setFiltered] = useState([]);
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterTag, setFilterTag] = useState('');
   const [error, setError] = useState('');
-
-  const fetchRecipes = async () => {
-    try {
-      setLoading(true);
-      const endpoint = activeTab === 'your' ? '/api/recipes/my-recipes' : '/api/users/favorites';
-      const res = await axiosInstance.get(endpoint, {
-        params: filter ? { filter } : {},
-      });
-      if (activeTab === 'your') {
-        setMyRecipes(res.data);
-      } else {
-        setFavorites(res.data);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchRecipes();
-  }, [activeTab, filter]);
+    const fetchMyRecipes = async () => {
+      try {
+        const res = await axiosInstance.get('/api/recipes/my-recipes');
+        setMyRecipes(res.data);
+        setFiltered(res.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const renderRecipes = (recipes) => {
-    if (loading) return <div className="text-center">Loading...</div>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
-    if (recipes.length === 0) return <p>No recipes found.</p>;
+    fetchMyRecipes();
+  }, []);
 
-    return (
-      <Row>
-        {recipes.map((recipe) => (
-          <Col key={recipe._id} md={4}>
-            <RecipeCard recipe={recipe} />
-          </Col>
-        ))}
-      </Row>
-    );
-  };
+  useEffect(() => {
+    let filtered = [...myRecipes];
+    if (filterCategory)
+      filtered = filtered.filter(r => r.category?.toLowerCase().includes(filterCategory.toLowerCase()));
+    if (filterTag)
+      filtered = filtered.filter(r => r.tags?.some(tag => tag.toLowerCase().includes(filterTag.toLowerCase())));
+    setFiltered(filtered);
+  }, [filterCategory, filterTag, myRecipes]);
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-3">Profile</h2>
-
-      <div className="mb-3">
-        <Button
-          variant={activeTab === 'your' ? 'primary' : 'outline-primary'}
-          onClick={() => setActiveTab('your')}
-          className="me-2"
-        >
-          Your Recipes
-        </Button>
-        <Button
-          variant={activeTab === 'favorites' ? 'primary' : 'outline-primary'}
-          onClick={() => setActiveTab('favorites')}
-        >
-          Favorites
-        </Button>
-      </div>
+      <h2 className="mb-3">Your Recipes</h2>
 
       <Row className="mb-3">
-        <Col md={6}>
+        <Col md={4}>
           <Form.Control
-            type="text"
-            placeholder="Filter by tag or category"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by Category"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          />
+        </Col>
+        <Col md={4}>
+          <Form.Control
+            placeholder="Filter by Tag"
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
           />
         </Col>
       </Row>
 
-      {activeTab === 'your' ? renderRecipes(myRecipes) : renderRecipes(favorites)}
+      {loading ? (
+        <div className="text-center">Loading...</div>
+      ) : error ? (
+        <div className="alert alert-danger">{error}</div>
+      ) : filtered.length > 0 ? (
+        <div className="row">
+          {filtered.map((recipe) => (
+            <div key={recipe._id} className="col-md-4">
+              <RecipeCard recipe={recipe} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No recipes found.</p>
+      )}
     </div>
   );
 };

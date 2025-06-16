@@ -7,19 +7,23 @@ const Homepage = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [sortBy, setSortBy] = useState('newest');
-  const [searchText, setSearchText] = useState('');
-  const [filterType, setFilterType] = useState('ingredient');
+  const [ingredientFilter, setIngredientFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
 
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const params = { sort: sortBy };
-        if (searchText) {
-          params[filterType] = searchText;
-        }
-
-        const { data } = await axiosInstance.get('/api/recipes', { params });
+        const { data } = await axiosInstance.get('/api/recipes', {
+          params: {
+            sort: sortBy,
+            ingredient: ingredientFilter,
+            category: categoryFilter,
+            tag: tagFilter,
+          }
+        });
         setRecipes(Array.isArray(data) ? data : []);
       } catch {
         setError('Failed to load recipes');
@@ -27,16 +31,15 @@ const Homepage = () => {
         setLoading(false);
       }
     };
-
     fetchRecipes();
-  }, [sortBy, searchText, filterType]);
+  }, [sortBy, ingredientFilter, categoryFilter, tagFilter]);
 
   if (loading) return <p>Loading recipes...</p>;
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
-      <h1>Recipes</h1>
+    <div className="container mt-4">
+      <h1 className="mb-4">Recipes</h1>
 
       <Row className="mb-3">
         <Col md={3}>
@@ -47,27 +50,36 @@ const Homepage = () => {
           </Form.Select>
         </Col>
         <Col md={3}>
-          <Form.Select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-            <option value="ingredient">By Ingredient</option>
-            <option value="tag">By Tag</option>
-            <option value="category">By Category</option>
-          </Form.Select>
-        </Col>
-        <Col md={6}>
           <Form.Control
             type="text"
-            placeholder={`Filter by ${filterType}`}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Filter by ingredient"
+            value={ingredientFilter}
+            onChange={(e) => setIngredientFilter(e.target.value)}
+          />
+        </Col>
+        <Col md={3}>
+          <Form.Control
+            type="text"
+            placeholder="Filter by category"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          />
+        </Col>
+        <Col md={3}>
+          <Form.Control
+            type="text"
+            placeholder="Filter by tag"
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
           />
         </Col>
       </Row>
 
       <Row>
-        {recipes.map((recipe) => (
+        {recipes.map(recipe => (
           <Col key={recipe._id} md={4} className="mb-4">
             <Card>
-              {recipe.image && <Card.Img variant="top" src={recipe.image} alt={recipe.title} />}
+              {recipe.imageUrl && <Card.Img variant="top" src={recipe.imageUrl} alt={recipe.title} />}
               <Card.Body>
                 <Card.Title>{recipe.title}</Card.Title>
                 {recipe.creatorName && (
