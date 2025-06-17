@@ -21,7 +21,7 @@ const ProfilePage = () => {
       try {
         const [myRes, favRes] = await Promise.all([
           axiosInstance.get('/api/recipes/my-recipes'),
-          axiosInstance.get('/api/users/favorites'),
+          axiosInstance.get('/api/recipes/favorites'),
         ]);
         setMyRecipes(myRes.data);
         setFavorites(favRes.data);

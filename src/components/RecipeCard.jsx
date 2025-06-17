@@ -1,24 +1,67 @@
-import { Card, Badge } from 'react-bootstrap';
+import { Card, Badge, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import axiosInstance from '../utils/axiosInstance';
+import { useAuth } from '../contexts/AuthContext';
 
-const RecipeCard = ({ recipe }) => {
+const RecipeCard = ({ recipe, showFavoriteButton = false }) => {
+  const { user } = useAuth();
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (showFavoriteButton && user && recipe.favoritedBy) {
+      setIsFavorited(recipe.favoritedBy.includes(user._id));
+    }
+  }, [recipe, user, showFavoriteButton]);
+
+  const handleFavoriteToggle = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post(`/api/recipes/favorites/${recipe._id}`);
+      console.log('✅ Favorite toggled:', res.data.message);
+      setIsFavorited(prev => !prev);
+    } catch (err) {
+      console.error('Error toggling favorite:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card className="my-3 p-3 rounded">
       <Link to={`/recipes/${recipe._id}`}>
-        {recipe.imageUrl ? (
+        {recipe.imageUrl && (
           <Card.Img
             src={recipe.imageUrl}
             variant="top"
             style={{ height: '200px', objectFit: 'cover' }}
           />
-        ) : null}
+        )}
       </Link>
       <Card.Body>
-        <Link to={`/recipes/${recipe._id}`}>
-          <Card.Title as="div">
-            <strong>{recipe.title}</strong>
-          </Card.Title>
-        </Link>
+        <div className="d-flex justify-content-between align-items-start">
+          <Link to={`/recipes/${recipe._id}`}>
+            <Card.Title as="div">
+              <strong>{recipe.title}</strong>
+            </Card.Title>
+          </Link>
+          {showFavoriteButton && user && (
+            <Button
+              variant="link"
+              className="p-0 ms-2"
+              onClick={handleFavoriteToggle}
+              disabled={loading}
+              aria-label="Toggle favorite"
+            >
+              <i
+                className={`fa${isFavorited ? 's' : 'r'} fa-heart`}
+                style={{ color: isFavorited ? 'red' : 'gray', fontSize: '1.3rem' }}
+              ></i>
+            </Button>
+          )}
+        </div>
 
         <Card.Text as="div">
           <div className="my-2">

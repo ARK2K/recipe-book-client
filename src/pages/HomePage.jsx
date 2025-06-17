@@ -66,7 +66,7 @@ const Homepage = () => {
       <Row>
         {recipes.map(recipe => (
           <Col key={recipe._id} md={4} className="mb-4">
-            <RecipeCard recipe={recipe} />
+            <RecipeCard recipe={recipe} showFavoriteButton />
           </Col>
         ))}
       </Row>
