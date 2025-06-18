@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Card, Button, Row, Col, Form } from 'react-bootstrap';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const Homepage = () => {
+  const { user, loading: authLoading } = useAuth();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,11 +14,20 @@ const Homepage = () => {
   const [filter, setFilter] = useState('');
 
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const category = searchParams.get('category') || '';
   const tag = searchParams.get('tag') || '';
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [authLoading, user, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+
     const fetchRecipes = async () => {
       try {
         const { data } = await axiosInstance.get('/api/recipes', {
@@ -29,10 +40,11 @@ const Homepage = () => {
         setLoading(false);
       }
     };
-    fetchRecipes();
-  }, [sortBy, filter, category, tag]);
 
-  if (loading) return <p>Loading recipes...</p>;
+    fetchRecipes();
+  }, [sortBy, filter, category, tag, user]);
+
+  if (authLoading || loading) return <p>Loading recipes...</p>;
   if (error) return <p>{error}</p>;
 
   return (
