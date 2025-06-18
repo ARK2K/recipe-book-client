@@ -11,7 +11,7 @@ const Header = () => {
     logout();
     navigate('/login');
   };
-  console.log('User object:', user);
+  
   return (
     <header>
       <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>

@@ -20,7 +20,6 @@ const RecipeCard = ({ recipe, showFavoriteButton = false }) => {
     try {
       setLoading(true);
       const res = await axiosInstance.post(`/api/recipes/favorites/${recipe._id}`);
-      console.log('✅ Favorite toggled:', res.data.message);
       setIsFavorited(prev => !prev);
     } catch (err) {
       console.error('Error toggling favorite:', err);

@@ -20,10 +20,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data } = await axiosInstance.post('/api/users/login', form); // ✅ Corrected path
-      console.log('✅ Login response:', data);
-
-      login(data); // Store user data in context/localStorage
+      const { data } = await axiosInstance.post('/api/users/login', form);
+      login(data);
       navigate('/');
     } catch (err) {
       const message = err.response?.data?.message || 'Login failed';
