@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Card, Button, Row, Col, Form } from 'react-bootstrap';
+import { Row, Col, Form } from 'react-bootstrap';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
 import { useAuth } from '../contexts/AuthContext';
 
 const Homepage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, favorites } = useAuth();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,7 +78,11 @@ const Homepage = () => {
       <Row>
         {recipes.map(recipe => (
           <Col key={recipe._id} md={4} className="mb-4">
-            <RecipeCard recipe={recipe} showFavoriteButton />
+            <RecipeCard
+              recipe={recipe}
+              isFavorited={favorites.includes(recipe._id)}
+              showFavoriteButton
+            />
           </Col>
         ))}
       </Row>
