@@ -11,7 +11,7 @@ const Header = () => {
     logout();
     navigate('/login');
   };
-
+  console.log('User object:', user);
   return (
     <header>
       <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
@@ -23,7 +23,7 @@ const Header = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
               {user ? (
-                <NavDropdown title={user.name} id="username">
+                <NavDropdown title={user?.name || 'Account'} id="username">
                   <LinkContainer to="/profile">
                     <NavDropdown.Item>Profile</NavDropdown.Item>
                   </LinkContainer>
@@ -35,18 +35,11 @@ const Header = () => {
                   </NavDropdown.Item>
                 </NavDropdown>
               ) : (
-                <>
-                  <LinkContainer to="/login">
-                    <Nav.Link>
-                      <i className="fas fa-user"></i> Sign In
-                    </Nav.Link>
-                  </LinkContainer>
-                  <LinkContainer to="/register">
-                    <Nav.Link>
-                      <i className="fas fa-user-plus"></i> Register
-                    </Nav.Link>
-                  </LinkContainer>
-                </>
+                <LinkContainer to="/login">
+                  <Nav.Link>
+                    <i className="fas fa-user"></i> Sign In
+                  </Nav.Link>
+                </LinkContainer>
               )}
             </Nav>
           </Navbar.Collapse>

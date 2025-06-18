@@ -19,7 +19,11 @@ export const AuthProvider = ({ children }) => {
           if (isExpired) {
             await refreshToken();
           } else {
-            setUser({ _id: decoded.id });
+            // ✅ Fetch user profile if token is valid
+            const profileRes = await axiosInstance.get('/api/users/profile', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(profileRes.data);
           }
         } catch (err) {
           logout();
@@ -34,11 +38,16 @@ export const AuthProvider = ({ children }) => {
   const refreshToken = async () => {
     try {
       const { data } = await axiosInstance.get('/api/users/refresh', {
-        withCredentials: true
+        withCredentials: true,
       });
       setToken(data.token);
       localStorage.setItem('token', data.token);
-      setUser({ _id: jwtDecode(data.token).id });
+
+      // ✅ Fetch user profile after refreshing token
+      const profileRes = await axiosInstance.get('/api/users/profile', {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      setUser(profileRes.data);
     } catch (err) {
       logout();
     }
@@ -47,13 +56,17 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     localStorage.setItem('token', userData.token);
     setToken(userData.token);
-    setUser({ _id: userData._id, name: userData.name });
+    setUser({
+      _id: userData._id,
+      name: userData.name,
+      email: userData.email,
+    });
   };
 
   const logout = async () => {
     try {
       await axiosInstance.get('/api/users/logout', {
-        withCredentials: true
+        withCredentials: true,
       });
     } catch (err) {}
     localStorage.removeItem('token');
