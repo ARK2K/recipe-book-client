@@ -37,7 +37,7 @@ const Header = () => {
               !isLoginPage && (
                 <LinkContainer to="/login">
                   <Nav.Link>
-                    <i className="fas fa-user"></i> Sign In
+                    <i className="fas fa-user"></i> Log In
                   </Nav.Link>
                 </LinkContainer>
               )
