@@ -12,7 +12,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/'); // Redirect if already logged in
+      navigate('/');
     }
   }, [user, navigate]);
 
@@ -39,33 +39,41 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="login-page">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-        {error && <p className="error">{error}</p>}
-      </form>
-      <p>
-        Don't have an account? <Link to="/register">Sign up here</Link>
-      </p>
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="card p-4 shadow-sm" style={{ width: '100%', maxWidth: '400px' }}>
+        <h2 className="text-center mb-4">Login</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button className="btn btn-primary w-100" type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+          {error && <p className="text-danger mt-3 text-center">{error}</p>}
+        </form>
+        <p className="text-center mt-3">
+          Don't have an account? <Link to="/register">Sign up here</Link>
+        </p>
+      </div>
     </div>
   );
 };
