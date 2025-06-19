@@ -14,6 +14,9 @@ export default defineConfig({
       ]
     })
   ],
+  build: {
+    outDir: 'dist'
+  },
   optimizeDeps: {
     include: ['jwt-decode'],
   },
