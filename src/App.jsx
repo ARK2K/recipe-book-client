@@ -29,9 +29,9 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className="d-flex flex-column min-vh-100">
       <Header />
-      <main className="py-3">
+      <main className="py-3 flex-grow-1">
         <div className="container">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -48,7 +48,7 @@ function App() {
       </main>
       <Footer />
       <ToastContainer />
-    </>
+    </div>
   );
 }
 
