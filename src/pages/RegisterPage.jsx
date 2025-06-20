@@ -15,6 +15,7 @@ function RegisterPage() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -22,16 +23,21 @@ function RegisterPage() {
 
     try {
       const data = await authService.register(name, email, password);
-      setAuth(data); // ✅ Set user context and localStorage
-      toast.success('Registration successful!');
-      navigate('/');
+      if (data) {
+        setAuth(data);
+        toast.success('Registration successful!');
+        navigate('/');
+      } else {
+        toast.error('Registration failed');
+      }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const message = error.response?.data?.message || 'Registration failed';
+      toast.error(message);
     }
   };
 
   return (
-    <div className="d-flex justify-content-center">
+    <div className="d-flex justify-content-center mt-4">
       <Col md={6}>
         <h1>Sign Up</h1>
         <Form onSubmit={submitHandler}>
