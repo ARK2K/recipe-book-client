@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Row, Col, Form } from 'react-bootstrap';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Row, Col, Form, Button } from 'react-bootstrap';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,7 +31,7 @@ const Homepage = () => {
     const fetchRecipes = async () => {
       try {
         const { data } = await axiosInstance.get('/api/recipes', {
-          params: { sort: sortBy, ingredient: filter, category, tag }
+          params: { sort: sortBy, ingredient: filter, category, tag },
         });
         setRecipes(Array.isArray(data) ? data : []);
       } catch {
@@ -43,6 +43,11 @@ const Homepage = () => {
 
     fetchRecipes();
   }, [sortBy, filter, category, tag, user]);
+
+  const handleClearFilters = () => {
+    setFilter('');
+    navigate('/', { replace: true });
+  };
 
   if (authLoading || loading) return <p>Loading recipes...</p>;
   if (error) return <p>{error}</p>;
@@ -71,12 +76,18 @@ const Homepage = () => {
 
       {(category || tag || filter) && (
         <div className="mb-3">
-          <Link to="/" className="btn btn-outline-secondary btn-sm">Clear Filters</Link>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={handleClearFilters}
+          >
+            Clear Filters
+          </Button>
         </div>
       )}
 
       <Row>
-        {recipes.map(recipe => (
+        {recipes.map((recipe) => (
           <Col key={recipe._id} md={4} className="mb-4">
             <RecipeCard
               recipe={recipe}
