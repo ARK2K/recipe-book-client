@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import RecipeCard from '../components/RecipeCard';
-import { Form, Row, Col, Nav } from 'react-bootstrap';
+import { Form, Row, Col, Nav, Button } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
 
 const ProfilePage = () => {
@@ -67,6 +67,12 @@ const ProfilePage = () => {
     setFiltered(filteredData);
   }, [filterCategory, filterTag, sortBy, activeTab, myRecipes, favorites]);
 
+  const clearFilters = () => {
+    setFilterCategory('');
+    setFilterTag('');
+    setSortBy('newest');
+  };
+
   return (
     <div className="container mt-4">
       <h2 className="mb-3">Profile</h2>
@@ -103,6 +109,14 @@ const ProfilePage = () => {
           </Form.Select>
         </Col>
       </Row>
+
+      {(filterCategory || filterTag || sortBy !== 'newest') && (
+        <div className="mb-3 text-end">
+          <Button variant="outline-secondary" size="sm" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center">Loading...</div>
