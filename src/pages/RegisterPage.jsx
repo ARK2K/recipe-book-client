@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
 console.log('toast:', toast);
+console.log('toast.success:',typeof toast.success);
 
 function RegisterPage() {
   const [name, setName] = useState('');
