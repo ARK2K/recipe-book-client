@@ -7,12 +7,19 @@ const authService = {
   },
 
   register: async (name, email, password) => {
-    const response = await axiosInstance.post('/api/users/register', {
-      name,
-      email,
-      password
-    });
-    return response.data;
+    try {
+      const response = await axiosInstance.post('/api/users/register', {
+        name,
+        email,
+        password
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('🔴 Registration error:', error);
+      console.error('🔴 error.response.data:', error.response?.data);
+      throw error;
+    }
   },
 
   logout: async () => {

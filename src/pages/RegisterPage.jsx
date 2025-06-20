@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
-console.log('✅ toast:', toast);
-console.log('✅ toast.success:', toast.success);
-console.log('✅ toast.error:', toast.error);
+console.log('toast:', toast);
+console.log('toast.success:', typeof toast.success);
+console.log('toast.error:', typeof toast.error);
 
 function RegisterPage() {
   const [name, setName] = useState('');
@@ -17,25 +17,12 @@ function RegisterPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuth();
 
-  useEffect(() => {
-    try {
-      console.log('🚀 Triggering test toast on mount...');
-      toast('✅ Test toast triggered');
-    } catch (err) {
-      console.error('❌ Test toast failed:', err);
-    }
-  }, []);
-
   const submitHandler = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      try {
-        console.log('📦 About to call toast.error with:', 'Passwords do not match');
-        toast.error('Passwords do not match');
-      } catch (err) {
-        console.error('❌ toast.error() threw error:', err);
-      }
+      console.log('About to call toast.error with: Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -44,24 +31,27 @@ function RegisterPage() {
 
       if (data && data.token) {
         setAuth(data);
-        try {
-          console.log('📦 About to call toast.success with:', 'Registration successful!');
-          toast.success('Registration successful!');
-        } catch (err) {
-          console.error('❌ toast.success() threw error:', err);
-        }
+        toast.success('Registration successful!');
         navigate('/');
       } else {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Registration failed';
-      try {
-        console.log('📦 About to call toast.error with:', message);
-        toast.error(message);
-      } catch (err) {
-        console.error('❌ toast.error() threw error:', err);
+      console.error('❌ Registration error caught:', error);
+
+      let message = error.message || 'Registration failed';
+
+      if (error.response?.data?.message) {
+        if (typeof error.response.data.message === 'string') {
+          message = error.response.data.message;
+        } else {
+          console.warn('⚠️ Non-string error.response.data.message:', error.response.data.message);
+          message = 'Unexpected error occurred';
+        }
       }
+
+      console.log('✅ Calling toast.error with:', message);
+      toast.error(message);
     }
   };
 
