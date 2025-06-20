@@ -23,15 +23,16 @@ function RegisterPage() {
 
     try {
       const data = await authService.register(name, email, password);
-      if (data) {
+      
+      if (data && data.token) {
         setAuth(data);
         toast.success('Registration successful!');
         navigate('/');
       } else {
-        toast.error('Registration failed');
+        throw new Error('Invalid registration response');
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      const message = error.response?.data?.message || error.message || 'Registration failed';
       toast.error(message);
     }
   };
