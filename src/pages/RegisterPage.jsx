@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import toast from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
+
+console.log('toast:', toast);
 
 function RegisterPage() {
   const [name, setName] = useState('');
@@ -23,7 +25,7 @@ function RegisterPage() {
 
     try {
       const data = await authService.register(name, email, password);
-      
+
       if (data && data.token) {
         setAuth(data);
         toast.success('Registration successful!');
