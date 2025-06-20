@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
-console.log('toast:', toast);
-console.log('toast.success:',typeof toast.success);
+console.log('✅ toast:', toast);
+console.log('✅ toast.success:', toast.success);
+console.log('✅ toast.error:', toast.error);
 
 function RegisterPage() {
   const [name, setName] = useState('');
@@ -16,11 +17,25 @@ function RegisterPage() {
   const navigate = useNavigate();
   const { setAuth } = useAuth();
 
+  useEffect(() => {
+    try {
+      console.log('🚀 Triggering test toast on mount...');
+      toast('✅ Test toast triggered');
+    } catch (err) {
+      console.error('❌ Test toast failed:', err);
+    }
+  }, []);
+
   const submitHandler = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      try {
+        console.log('📦 About to call toast.error with:', 'Passwords do not match');
+        toast.error('Passwords do not match');
+      } catch (err) {
+        console.error('❌ toast.error() threw error:', err);
+      }
       return;
     }
 
@@ -29,14 +44,24 @@ function RegisterPage() {
 
       if (data && data.token) {
         setAuth(data);
-        toast.success('Registration successful!');
+        try {
+          console.log('📦 About to call toast.success with:', 'Registration successful!');
+          toast.success('Registration successful!');
+        } catch (err) {
+          console.error('❌ toast.success() threw error:', err);
+        }
         navigate('/');
       } else {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Registration failed';
-      toast.error(message);
+      try {
+        console.log('📦 About to call toast.error with:', message);
+        toast.error(message);
+      } catch (err) {
+        console.error('❌ toast.error() threw error:', err);
+      }
     }
   };
 

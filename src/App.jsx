@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+console.log('🌍 API_BASE_URL =', API_BASE_URL);
 
 function App() {
   const location = useLocation();
@@ -23,10 +24,14 @@ function App() {
     const wakeUpBackend = async () => {
       try {
         await axios.get(`${API_BASE_URL}/api/health`);
-      } catch (error) {}
+      } catch (error) {
+        console.error('❌ Failed to wake backend:', error);
+      }
     };
     wakeUpBackend();
   }, []);
+
+  console.log('🧱 ToastContainer rendered');
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -47,7 +52,7 @@ function App() {
         </div>
       </main>
       <Footer />
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+      <ToastContainer />
     </div>
   );
 }
