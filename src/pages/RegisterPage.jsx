@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import toast from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
