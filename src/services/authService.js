@@ -7,7 +7,11 @@ const authService = {
   },
 
   register: async (name, email, password) => {
-    const response = await axiosInstance.post('/api/users/register', { name, email, password });
+    const response = await axiosInstance.post(
+      '/api/users/register',
+      { name, email, password },
+      { validateStatus: status => status >= 200 && status < 300, }
+    );
     return response.data;
   },
 
