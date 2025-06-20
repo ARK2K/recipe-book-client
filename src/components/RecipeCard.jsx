@@ -24,7 +24,7 @@ const RecipeCard = ({ recipe, isFavorited = false, showFavoriteButton = false })
   };
 
   return (
-    <Card className="my-3 p-3 rounded">
+    <Card className="my-3 p-3 rounded" style={{ backgroundColor: '#f0f2f5' }}>
       <Link to={`/recipes/${recipe._id}`}>
         {recipe.imageUrl && (
           <Card.Img
