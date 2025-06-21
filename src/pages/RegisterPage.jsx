@@ -35,6 +35,8 @@ function RegisterPage() {
       const message = error?.response?.data?.message || error?.message || 'Registration failed';
       toast.error(typeof message === 'string' ? message : 'Registration failed');
       console.log('Registration error:', error);
+      console.log('Error response:', error?.response);
+      console.log('Data', data);
     }
   };
 
