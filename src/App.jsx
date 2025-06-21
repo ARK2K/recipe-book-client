@@ -1,6 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'sonner';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -31,11 +30,9 @@ function App() {
     wakeUpBackend();
   }, []);
 
-  console.log('🧱 ToastContainer rendered');
-
   return (
     <div className="d-flex flex-column min-vh-100">
-      <ToastContainer />
+      <Toaster richColors position="top-right" />
       <Header />
       <main className="py-3 flex-grow-1">
         <div className="container">

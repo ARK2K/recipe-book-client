@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -28,11 +29,12 @@ const LoginPage = () => {
     try {
       const { data } = await axiosInstance.post('/api/users/login', form);
       login(data);
+      toast.success('Logged in successfully');
       navigate('/');
     } catch (err) {
       const message = err.response?.data?.message || 'Login failed';
       setError(message);
-      console.log('Login error:', message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

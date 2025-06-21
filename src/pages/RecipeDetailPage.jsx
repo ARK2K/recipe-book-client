@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Container, Spinner, Button, Form } from 'react-bootstrap';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 

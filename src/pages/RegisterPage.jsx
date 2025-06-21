@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
@@ -17,7 +17,7 @@ function RegisterPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast('Passwords do not match', { type: 'error' });
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -26,15 +26,14 @@ function RegisterPage() {
 
       if (data && data.token) {
         setAuth(data);
-        toast('Registration successful!', { type: 'success' });
+        toast.success('Registration successful!');
         navigate('/');
       } else {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
-      let message = error?.response?.data?.message || error?.message || 'Registration failed';
-      toast(typeof message === 'string' ? message : 'Registration failed', { type: 'error' });
-      console.log('Registration error:', error);
+      const message = error?.response?.data?.message || error?.message || 'Registration failed';
+      toast.error(typeof message === 'string' ? message : 'Registration failed');
     }
   };
 
