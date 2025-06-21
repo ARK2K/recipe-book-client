@@ -32,11 +32,9 @@ function RegisterPage() {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
-      const message = error?.response?.data?.message || error?.message || 'Registration failed';
+      let message = error?.response?.data?.message || error?.message || 'Registration failed';
       toast.error(typeof message === 'string' ? message : 'Registration failed');
       console.log('Registration error:', error);
-      console.log('Error response:', error?.response);
-      console.log('Data', data);
     }
   };
 
@@ -44,7 +42,7 @@ function RegisterPage() {
     <div className="d-flex justify-content-center mt-4">
       <Col md={6}>
         <h1>Sign Up</h1>
-        <Form onSubmit={submitHandler}>
+        <form onSubmit={submitHandler}>
           <Form.Group className="my-3" controlId="name">
             <Form.Label>Name</Form.Label>
             <Form.Control
@@ -92,7 +90,7 @@ function RegisterPage() {
           <Button type="submit" variant="primary">
             Register
           </Button>
-        </Form>
+        </form>
 
         <Row className="py-3">
           <Col>
