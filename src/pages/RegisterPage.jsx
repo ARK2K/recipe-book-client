@@ -17,7 +17,7 @@ function RegisterPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast('Passwords do not match', { type: 'error' });
       return;
     }
 
@@ -26,14 +26,14 @@ function RegisterPage() {
 
       if (data && data.token) {
         setAuth(data);
-        toast.success('Registration successful!');
+        toast('Registration successful!', { type: 'success' });
         navigate('/');
       } else {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
       let message = error?.response?.data?.message || error?.message || 'Registration failed';
-      toast.error(typeof message === 'string' ? message : 'Registration failed');
+      toast(typeof message === 'string' ? message : 'Registration failed', { type: 'error' });
     }
   };
 
