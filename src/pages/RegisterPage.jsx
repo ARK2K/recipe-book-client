@@ -1,105 +1,111 @@
-import { useState } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import authService from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
-function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const RegisterPage = () => {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const { login, user } = useAuth();
   const navigate = useNavigate();
-  const { setAuth } = useAuth();
 
-  const submitHandler = async (e) => {
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (password !== confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       toast.error('Passwords do not match');
+      setLoading(false);
       return;
     }
 
     try {
-      const data = await authService.register(name, email, password);
-
-      if (data && data.token) {
-        setAuth(data);
-        toast.success('Registration successful!');
-        navigate('/');
-      } else {
-        throw new Error('Invalid registration response');
-      }
-    } catch (error) {
-      let message = error?.response?.data?.message || error?.message || 'Registration failed';
-      toast.error(typeof message === 'string' ? message : 'Registration failed');
-      console.log('Registration error:', error);
+      const data = await authService.register(form.name, form.email, form.password);
+      login(data);
+      toast.success('Registered successfully!');
+      navigate('/');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Registration failed';
+      toast.error(message);
+      console.error('❌ Registration error:', message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="d-flex justify-content-center mt-4">
-      <Col md={6}>
-        <h1>Sign Up</h1>
-        <form onSubmit={submitHandler}>
-          <Form.Group className="my-3" controlId="name">
-            <Form.Label>Name</Form.Label>
-            <Form.Control
+    <div className="container mt-5 d-flex justify-content-center">
+      <div className="card p-4 shadow-sm" style={{ width: '100%', maxWidth: '400px' }}>
+        <h2 className="text-center mb-4">Sign Up</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <input
               type="text"
-              placeholder="Enter name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              className="form-control"
+              placeholder="Name"
+              value={form.name}
+              onChange={handleChange}
               required
             />
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="email">
-            <Form.Label>Email Address</Form.Label>
-            <Form.Control
+          </div>
+          <div className="mb-3">
+            <input
               type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              className="form-control"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
               required
             />
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="password">
-            <Form.Label>Password</Form.Label>
-            <Form.Control
+          </div>
+          <div className="mb-3">
+            <input
               type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              className="form-control"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
               required
             />
-          </Form.Group>
-
-          <Form.Group className="my-3" controlId="confirmPassword">
-            <Form.Label>Confirm Password</Form.Label>
-            <Form.Control
+          </div>
+          <div className="mb-3">
+            <input
               type="password"
-              placeholder="Confirm password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              className="form-control"
+              placeholder="Confirm Password"
+              value={form.confirmPassword}
+              onChange={handleChange}
               required
             />
-          </Form.Group>
-
-          <Button type="submit" variant="primary">
-            Register
-          </Button>
+          </div>
+          <button className="btn btn-primary w-100" type="submit" disabled={loading}>
+            {loading ? 'Registering...' : 'Register'}
+          </button>
         </form>
-
-        <Row className="py-3">
-          <Col>
-            Have an Account? <Link to="/login">Login</Link>
-          </Col>
-        </Row>
-      </Col>
+        <p className="text-center mt-3">
+          Have an Account? <Link to="/login">Login</Link>
+        </p>
+      </div>
     </div>
   );
-}
+};
 
 export default RegisterPage;

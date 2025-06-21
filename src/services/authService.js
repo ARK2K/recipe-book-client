@@ -7,6 +7,7 @@ const authService = {
   },
 
   register: async (name, email, password) => {
+    console.log('📤 Sending registration request:', { name, email, password });
     const response = await axiosInstance.post('/api/users/register', {
       name,
       email,
