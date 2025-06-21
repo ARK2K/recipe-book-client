@@ -5,10 +5,6 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import authService from '../services/authService';
 
-console.log('toast:', toast);
-console.log('toast.success:', typeof toast.success);
-console.log('toast.error:', typeof toast.error);
-
 function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +17,6 @@ function RegisterPage() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      console.log('About to call toast.error with: Passwords do not match');
       toast.error('Passwords do not match');
       return;
     }
@@ -37,21 +32,8 @@ function RegisterPage() {
         throw new Error('Invalid registration response');
       }
     } catch (error) {
-      console.error('❌ Registration error caught:', error);
-
-      let message = error.message || 'Registration failed';
-
-      if (error.response?.data?.message) {
-        if (typeof error.response.data.message === 'string') {
-          message = error.response.data.message;
-        } else {
-          console.warn('⚠️ Non-string error.response.data.message:', error.response.data.message);
-          message = 'Unexpected error occurred';
-        }
-      }
-
-      console.log('✅ Calling toast.error with:', message);
-      toast.error(message);
+      let message = error?.response?.data?.message || error?.message || 'Registration failed';
+      toast.error(typeof message === 'string' ? message : 'Registration failed');
     }
   };
 
