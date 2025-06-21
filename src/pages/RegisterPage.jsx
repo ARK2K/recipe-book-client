@@ -34,6 +34,7 @@ function RegisterPage() {
     } catch (error) {
       let message = error?.response?.data?.message || error?.message || 'Registration failed';
       toast(typeof message === 'string' ? message : 'Registration failed', { type: 'error' });
+      console.log('Registration error:', error);
     }
   };
 

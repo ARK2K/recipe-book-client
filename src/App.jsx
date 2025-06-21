@@ -35,6 +35,7 @@ function App() {
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      <ToastContainer />
       <Header />
       <main className="py-3 flex-grow-1">
         <div className="container">
@@ -52,7 +53,6 @@ function App() {
         </div>
       </main>
       <Footer />
-      <ToastContainer />
     </div>
   );
 }
