@@ -57,15 +57,6 @@ const RecipeDetailPage = () => {
     }
   };
 
-  const handleRatingSubmit = async () => {
-    try {
-      await recipeService.submitRating(id, rating);
-      toast.success('Rating submitted!');
-    } catch (err) {
-      toast.error('Failed to submit rating');
-    }
-  };
-
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -80,7 +71,7 @@ const RecipeDetailPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || loadingRecipe) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
@@ -90,14 +81,6 @@ const RecipeDetailPage = () => {
 
   if (!user) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (loadingRecipe) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" role="status" />
-      </Container>
-    );
   }
 
   if (!recipe) {
@@ -114,11 +97,17 @@ const RecipeDetailPage = () => {
       <p><strong>By:</strong> {recipe.creatorName}</p>
       
       {(recipe.imageUrl || recipe.image) && (
-        <div className="mb-3">
+        <div className="mb-3 text-center">
           <img
             src={recipe.imageUrl || recipe.image}
             alt="Recipe"
-            style={{ maxWidth: '100%', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              height: 'auto',
+              borderRadius: '8px',
+              objectFit: 'cover'
+            }}
           />
         </div>
       )}
@@ -142,6 +131,7 @@ const RecipeDetailPage = () => {
           {favorite ? 'Unfavorite' : 'Favorite'}
         </Button>
       </div>
+
       <Form onSubmit={handleCommentSubmit}>
         <Form.Group className="mb-2">
           <Form.Label>Your Rating:</Form.Label>
@@ -171,6 +161,7 @@ const RecipeDetailPage = () => {
         </Form.Group>
         <Button type="submit" variant="primary">Submit</Button>
       </Form>
+
       <div className="mt-4">
         <h5>Comments</h5>
         {recipe.comments && recipe.comments.length > 0 ? (
@@ -183,6 +174,7 @@ const RecipeDetailPage = () => {
           <p>No comments yet.</p>
         )}
       </div>
+
       {user && recipe.creatorId === user._id && (
         <div className="mt-4">
           <Link to={`/edit/${recipe._id}`} className="btn btn-warning me-2">Edit</Link>
