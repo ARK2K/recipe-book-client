@@ -114,7 +114,7 @@ const RecipeDetailPage = () => {
       <p><strong>By:</strong> {recipe.creatorName}</p>
 
       <div className="row">
-        
+
         {/* Left Section */}
         <div className="col-12 col-md-6">
           <p><strong>Description:</strong> {recipe.description}</p>
@@ -125,12 +125,13 @@ const RecipeDetailPage = () => {
               <li key={index}>{item}</li>
             ))}
           </ul>
-          <p><strong>Instructions:</strong></p>
-          <p>{recipe.instructions}</p>
         </div>
 
         {/* Right Section */}
         <div className="col-12 col-md-6">
+          <p><strong>Instructions:</strong></p>
+          <p>{recipe.instructions}</p>
+
           {(recipe.imageUrl || recipe.image) && (
             <div className="mb-3 text-center">
               <img
