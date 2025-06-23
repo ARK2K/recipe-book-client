@@ -125,6 +125,8 @@ const RecipeDetailPage = () => {
               <li key={index}>{item}</li>
             ))}
           </ul>
+          <p><strong>Instructions:</strong></p>
+          <p>{recipe.instructions}</p>
         </div>
 
         {/* Right Section */}
@@ -143,8 +145,6 @@ const RecipeDetailPage = () => {
               />
             </div>
           )}
-          <p><strong>Instructions:</strong></p>
-          <p>{recipe.instructions}</p>
         </div>
 
       </div>
