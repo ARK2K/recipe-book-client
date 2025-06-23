@@ -57,6 +57,15 @@ const RecipeDetailPage = () => {
     }
   };
 
+  const handleRatingSubmit = async () => {
+    try {
+      await recipeService.submitRating(id, rating);
+      toast.success('Rating submitted!');
+    } catch (err) {
+      toast.error('Failed to submit rating');
+    }
+  };
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -71,7 +80,7 @@ const RecipeDetailPage = () => {
     }
   };
 
-  if (loading || loadingRecipe) {
+  if (loading) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
@@ -81,6 +90,14 @@ const RecipeDetailPage = () => {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (loadingRecipe) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" />
+      </Container>
+    );
   }
 
   if (!recipe) {
@@ -95,37 +112,47 @@ const RecipeDetailPage = () => {
     <Container className="mt-4">
       <h1>{recipe.title}</h1>
       <p><strong>By:</strong> {recipe.creatorName}</p>
-      
-      {(recipe.imageUrl || recipe.image) && (
-        <div className="mb-3 text-center">
-          <img
-            src={recipe.imageUrl || recipe.image}
-            alt="Recipe"
-            style={{
-              width: '100%',
-              maxWidth: '500px',
-              height: 'auto',
-              borderRadius: '8px',
-              objectFit: 'cover'
-            }}
-          />
-        </div>
-      )}
 
-      <p><strong>Description:</strong> {recipe.description}</p>
-      <p><strong>Category:</strong> {recipe.category || 'N/A'}</p>
-      <p><strong>Ingredients:</strong></p>
-      <ul>
-        {recipe.ingredients.map((item, index) => (
-          <li key={index}>{item}</li>
-        ))}
-      </ul>
-      <p><strong>Instructions:</strong></p>
-      <p>{recipe.instructions}</p>
+      <div className="row">
+        
+        {/* Left Section */}
+        <div className="col-12 col-md-6">
+          <p><strong>Description:</strong> {recipe.description}</p>
+          <p><strong>Category:</strong> {recipe.category || 'N/A'}</p>
+          <p><strong>Ingredients:</strong></p>
+          <ul>
+            {recipe.ingredients.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right Section */}
+        <div className="col-12 col-md-6">
+          {(recipe.imageUrl || recipe.image) && (
+            <div className="mb-3 text-center">
+              <img
+                src={recipe.imageUrl || recipe.image}
+                alt="Recipe"
+                style={{
+                  width: '100%',
+                  maxHeight: '400px',
+                  objectFit: 'cover',
+                  borderRadius: '8px'
+                }}
+              />
+            </div>
+          )}
+          <p><strong>Instructions:</strong></p>
+          <p>{recipe.instructions}</p>
+        </div>
+
+      </div>
 
       <div className="mb-3">
         <strong>Average Rating:</strong> {recipe.averageRating?.toFixed(1) || 0} ({recipe.numReviews || 0} reviews)
       </div>
+
       <div className="mb-3">
         <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
           {favorite ? 'Unfavorite' : 'Favorite'}
@@ -149,6 +176,7 @@ const RecipeDetailPage = () => {
             ))}
           </div>
         </Form.Group>
+
         <Form.Group className="mb-2">
           <Form.Control
             as="textarea"
@@ -159,6 +187,7 @@ const RecipeDetailPage = () => {
             required
           />
         </Form.Group>
+
         <Button type="submit" variant="primary">Submit</Button>
       </Form>
 
