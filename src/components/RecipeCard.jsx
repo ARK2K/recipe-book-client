@@ -26,9 +26,9 @@ const RecipeCard = ({ recipe, isFavorited = false, showFavoriteButton = false })
   return (
     <Card className="my-3 p-3 rounded" style={{ backgroundColor: '#f0f2f5' }}>
       <Link to={`/recipes/${recipe._id}`}>
-        {recipe.imageUrl && (
+        {(recipe.imageUrl || recipe.image) && (
           <Card.Img
-            src={recipe.imageUrl}
+            src={recipe.imageUrl || recipe.image}
             variant="top"
             style={{ height: '200px', objectFit: 'cover' }}
           />
@@ -71,7 +71,7 @@ const RecipeCard = ({ recipe, isFavorited = false, showFavoriteButton = false })
           </div>
         </Card.Text>
 
-        <Card.Text as="p">{recipe.description.substring(0, 100)}...</Card.Text>
+        <Card.Text as="p">{recipe.description?.substring(0, 100)}...</Card.Text>
 
         {recipe.category && (
           <Link to={`/?category=${encodeURIComponent(recipe.category)}`}>

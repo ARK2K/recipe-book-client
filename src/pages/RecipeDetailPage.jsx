@@ -122,11 +122,17 @@ const RecipeDetailPage = () => {
       </ul>
       <p><strong>Instructions:</strong></p>
       <p>{recipe.instructions}</p>
-      {recipe.imageUrl && (
+
+      {(recipe.imageUrl || recipe.image) && (
         <div className="mb-3">
-          <img src={recipe.imageUrl} alt="Recipe" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+          <img
+            src={recipe.imageUrl || recipe.image}
+            alt="Recipe"
+            style={{ maxWidth: '100%', borderRadius: '8px' }}
+          />
         </div>
       )}
+
       <div className="mb-3">
         <strong>Average Rating:</strong> {recipe.averageRating?.toFixed(1) || 0} ({recipe.numReviews || 0} reviews)
       </div>
