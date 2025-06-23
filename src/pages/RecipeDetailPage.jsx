@@ -57,19 +57,10 @@ const RecipeDetailPage = () => {
     }
   };
 
-  const handleRatingSubmit = async () => {
-    try {
-      await recipeService.submitRating(id, rating);
-      toast.success('Rating submitted!');
-    } catch (err) {
-      toast.error('Failed to submit rating');
-    }
-  };
-
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     try {
-      await recipeService.submitComment(id, { text: comment, stars: rating });
+      await recipeService.submitComment(id, { comment, rating });
       toast.success('Comment added!');
       setComment('');
       setRating(0);
@@ -114,7 +105,6 @@ const RecipeDetailPage = () => {
       <p><strong>By:</strong> {recipe.creatorName}</p>
 
       <div className="row">
-
         {/* Left Section */}
         <div className="col-12 col-md-6">
           <p><strong>Description:</strong> {recipe.description}</p>
@@ -125,13 +115,12 @@ const RecipeDetailPage = () => {
               <li key={index}>{item}</li>
             ))}
           </ul>
+          <p><strong>Instructions:</strong></p>
+          <p>{recipe.instructions}</p>
         </div>
 
         {/* Right Section */}
         <div className="col-12 col-md-6">
-          <p><strong>Instructions:</strong></p>
-          <p>{recipe.instructions}</p>
-
           {(recipe.imageUrl || recipe.image) && (
             <div className="mb-3 text-center">
               <img
@@ -147,7 +136,6 @@ const RecipeDetailPage = () => {
             </div>
           )}
         </div>
-
       </div>
 
       <div className="mb-3">
@@ -197,7 +185,7 @@ const RecipeDetailPage = () => {
         {recipe.comments && recipe.comments.length > 0 ? (
           recipe.comments.map((c, idx) => (
             <div key={idx} className="mb-2">
-              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.text} ({c.stars} ★)
+              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.comment} ({c.rating} ★)
             </div>
           ))
         ) : (
