@@ -44,7 +44,10 @@ const recipeService = {
   },
 
   submitComment: async (id, { comment, rating }) => {
-    const response = await axiosInstance.post(`/api/recipes/${id}/comment`, { comment, rating });
+    const token = localStorage.getItem('token');
+    const response = await axiosInstance.post(`/api/recipes/${id}/comment`, { comment, rating }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data;
   },
 };
