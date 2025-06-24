@@ -35,6 +35,21 @@ const recipeService = {
     });
     return response.data;
   },
+
+  toggleFavorite: async (id) => {
+    const response = await axiosInstance.post(`/api/recipes/favorites/${id}`);
+    return response.data;
+  },
+
+  submitRating: async (id, stars) => {
+    const response = await axiosInstance.post(`/api/recipes/${id}/rate`, { stars });
+    return response.data;
+  },
+
+  submitComment: async (id, data) => {
+    const response = await axiosInstance.post(`/api/recipes/${id}/comment`, data);
+    return response.data;
+  },
 };
 
 export default recipeService;
