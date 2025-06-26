@@ -34,7 +34,7 @@ const recipeService = {
   },
 
   toggleFavorite: async (id) => {
-    const response = await axiosInstance.post(`/api/recipes/favorites/${id}`);
+    const response = await axiosInstance.post(`/api/users/favorites/${id}`);
     return response.data;
   },
 
