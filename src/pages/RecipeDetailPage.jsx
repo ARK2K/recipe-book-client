@@ -8,21 +8,25 @@ import { useAuth } from '../contexts/AuthContext';
 const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading, favorites, setFavorites } = useAuth();
+  const { user, loading, setFavorites } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
   const [loadingRecipe, setLoadingRecipe] = useState(true);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-
-  const isFavorite = favorites.includes(id);
+  const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
+        console.log("Fetching recipe with ID:", id);
         const data = await recipeService.getRecipeById(id);
+        console.log("Fetched Recipe Data:", data);
+
         setRecipe(data);
+        setFavorite(data.favorites?.includes(user?._id));
       } catch (err) {
+        console.error("Error fetching recipe:", err);
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
       } finally {
@@ -30,10 +34,12 @@ const RecipeDetailPage = () => {
       }
     };
 
-    if (user) {
+    if (user && id) {
       fetchRecipe();
+    } else if (!user && !loading) {
+      navigate('/login');
     }
-  }, [id, user, navigate]);
+  }, [id, user, loading, navigate]);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
@@ -43,6 +49,7 @@ const RecipeDetailPage = () => {
       toast.success('Recipe deleted successfully');
       navigate('/');
     } catch (err) {
+      console.error("Delete failed:", err);
       toast.error(err.response?.data?.message || 'Failed to delete recipe');
     }
   };
@@ -50,10 +57,13 @@ const RecipeDetailPage = () => {
   const handleFavoriteToggle = async () => {
     try {
       await recipeService.toggleFavorite(id);
+      setFavorite((prev) => !prev);
+      toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
+
       const updatedFavorites = await recipeService.refreshFavorites();
-      setFavorites(updatedFavorites.map(r => r._id));
-      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+      setFavorites(updatedFavorites);
     } catch (err) {
+      console.error("Favorite toggle failed:", err);
       toast.error('Failed to toggle favorite');
     }
   };
@@ -65,14 +75,16 @@ const RecipeDetailPage = () => {
       toast.success('Comment added!');
       setComment('');
       setRating(0);
+
       const updatedRecipe = await recipeService.getRecipeById(id);
       setRecipe(updatedRecipe);
     } catch (err) {
+      console.error("Comment submission failed:", err);
       toast.error('Failed to submit comment');
     }
   };
 
-  if (loading || !user) {
+  if (loading || loadingRecipe) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
@@ -80,18 +92,14 @@ const RecipeDetailPage = () => {
     );
   }
 
-  if (loadingRecipe) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" role="status" />
-      </Container>
-    );
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   if (!recipe) {
     return (
       <Container className="mt-5 text-center">
-        <p>Recipe not found.</p>
+        <p>Recipe not found or failed to load.</p>
       </Container>
     );
   }
@@ -99,7 +107,7 @@ const RecipeDetailPage = () => {
   return (
     <Container className="mt-4">
       <h1>{recipe.title}</h1>
-      <p><strong>By:</strong> {recipe.creatorName}</p>
+      <p><strong>By:</strong> {recipe.creatorName || 'Unknown'}</p>
 
       <div className="row">
         <div className="col-12 col-md-6">
@@ -107,7 +115,7 @@ const RecipeDetailPage = () => {
           <p><strong>Category:</strong> {recipe.category || 'N/A'}</p>
           <p><strong>Ingredients:</strong></p>
           <ul>
-            {recipe.ingredients.map((item, index) => (
+            {recipe.ingredients?.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
           </ul>
@@ -116,7 +124,7 @@ const RecipeDetailPage = () => {
         </div>
 
         <div className="col-12 col-md-6">
-          {(recipe.imageUrl || recipe.image) && (
+          {(recipe.imageUrl || recipe.image) ? (
             <div className="mb-3 text-center">
               <img
                 src={recipe.imageUrl || recipe.image}
@@ -129,6 +137,8 @@ const RecipeDetailPage = () => {
                 }}
               />
             </div>
+          ) : (
+            <div className="text-center text-muted mb-3">No Image Available</div>
           )}
         </div>
       </div>
@@ -138,8 +148,8 @@ const RecipeDetailPage = () => {
       </div>
 
       <div className="mb-3">
-        <Button variant={isFavorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
-          {isFavorite ? 'Unfavorite' : 'Favorite'}
+        <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
+          {favorite ? 'Unfavorite' : 'Favorite'}
         </Button>
       </div>
 
@@ -177,7 +187,7 @@ const RecipeDetailPage = () => {
 
       <div className="mt-4">
         <h5>Comments</h5>
-        {recipe.comments && recipe.comments.length > 0 ? (
+        {recipe.comments?.length ? (
           recipe.comments.map((c, idx) => (
             <div key={idx} className="mb-2">
               <strong>{c.user?.name || 'Anonymous'}:</strong> {c.text} ({c.stars} ★)
