@@ -19,14 +19,11 @@ const RecipeDetailPage = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        console.log("Fetching recipe with ID:", id);
         const data = await recipeService.getRecipeById(id);
-        console.log("Fetched Recipe Data:", data);
-
         setRecipe(data);
         setFavorite(data.favorites?.includes(user?._id));
       } catch (err) {
-        console.error("Error fetching recipe:", err);
+        console.error('Fetch Error:', err);
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
       } finally {
@@ -36,10 +33,8 @@ const RecipeDetailPage = () => {
 
     if (user && id) {
       fetchRecipe();
-    } else if (!user && !loading) {
-      navigate('/login');
     }
-  }, [id, user, loading, navigate]);
+  }, [id, user, navigate]);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
@@ -49,7 +44,6 @@ const RecipeDetailPage = () => {
       toast.success('Recipe deleted successfully');
       navigate('/');
     } catch (err) {
-      console.error("Delete failed:", err);
       toast.error(err.response?.data?.message || 'Failed to delete recipe');
     }
   };
@@ -63,7 +57,6 @@ const RecipeDetailPage = () => {
       const updatedFavorites = await recipeService.refreshFavorites();
       setFavorites(updatedFavorites);
     } catch (err) {
-      console.error("Favorite toggle failed:", err);
       toast.error('Failed to toggle favorite');
     }
   };
@@ -75,16 +68,14 @@ const RecipeDetailPage = () => {
       toast.success('Comment added!');
       setComment('');
       setRating(0);
-
       const updatedRecipe = await recipeService.getRecipeById(id);
       setRecipe(updatedRecipe);
     } catch (err) {
-      console.error("Comment submission failed:", err);
       toast.error('Failed to submit comment');
     }
   };
 
-  if (loading || loadingRecipe) {
+  if (loading || !user) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
@@ -92,14 +83,18 @@ const RecipeDetailPage = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (loadingRecipe) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" />
+      </Container>
+    );
   }
 
   if (!recipe) {
     return (
       <Container className="mt-5 text-center">
-        <p>Recipe not found or failed to load.</p>
+        <p>Recipe not found.</p>
       </Container>
     );
   }
@@ -133,12 +128,12 @@ const RecipeDetailPage = () => {
                   width: '100%',
                   maxHeight: '400px',
                   objectFit: 'cover',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
                 }}
               />
             </div>
           ) : (
-            <div className="text-center text-muted mb-3">No Image Available</div>
+            <div className="text-center text-muted mb-3">No image available</div>
           )}
         </div>
       </div>
@@ -164,6 +159,7 @@ const RecipeDetailPage = () => {
                 size="sm"
                 onClick={() => setRating(star)}
                 className="me-1"
+                type="button"
               >
                 ★
               </Button>
@@ -187,10 +183,10 @@ const RecipeDetailPage = () => {
 
       <div className="mt-4">
         <h5>Comments</h5>
-        {recipe.comments?.length ? (
+        {recipe.comments?.length > 0 ? (
           recipe.comments.map((c, idx) => (
             <div key={idx} className="mb-2">
-              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.text} ({c.stars} ★)
+              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.comment} ({c.rating} ★)
             </div>
           ))
         ) : (
