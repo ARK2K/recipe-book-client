@@ -34,7 +34,7 @@ const recipeService = {
   },
 
   toggleFavorite: async (id) => {
-    const response = await axiosInstance.post(`/api/users/favorites/${id}`);
+    const response = await axiosInstance.post(`/api/recipes/favorites/${id}`);
     return response.data;
   },
 
@@ -44,7 +44,10 @@ const recipeService = {
   },
 
   submitComment: async (id, { comment, rating }) => {
-    const response = await axiosInstance.post(`/api/recipes/${id}/comment`, { comment, rating });
+    const response = await axiosInstance.post(`/api/recipes/${id}/comment`, {
+      comment,
+      rating
+    });
     return response.data;
   },
 

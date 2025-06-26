@@ -1,93 +1,56 @@
-import { Card, Badge, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import axiosInstance from '../utils/axiosInstance';
-import { useAuth } from '../contexts/AuthContext';
 import recipeService from '../services/recipeService';
+import { toast } from 'sonner';
 
-const RecipeCard = ({ recipe, isFavorited = false, showFavoriteButton = false }) => {
-  const { user, token, setFavorites } = useAuth();
-  const [loading, setLoading] = useState(false);
+const RecipeCard = ({ recipe, refreshData, isFavoriteList = false }) => {
+  const [likes, setLikes] = useState(recipe.likes?.length || 0);
+  const [liked, setLiked] = useState(recipe.likes?.includes?.(recipe.user?._id) || false);
+  const [favorite, setFavorite] = useState(false);
 
-  const handleFavoriteToggle = async () => {
-    if (!user) return;
+  const handleLike = async () => {
     try {
-      setLoading(true);
-      await axiosInstance.post(`/api/users/favorites/${recipe._id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const updated = await recipeService.refreshFavorites();
-      setFavorites(updated);
+      const res = await recipeService.toggleLike(recipe._id);
+      setLikes(res.likes);
+      setLiked(res.liked);
     } catch (err) {
-      console.error('Error toggling favorite:', err);
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.message || 'Failed to like recipe');
+    }
+  };
+
+  const handleFavorite = async () => {
+    try {
+      const res = await recipeService.toggleFavorite(recipe._id);
+      setFavorite(res.message.includes('added'));
+      if (isFavoriteList && res.message.includes('removed')) {
+        refreshData();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Favorite action failed');
     }
   };
 
   return (
-    <Card className="my-3 p-3 rounded" style={{ backgroundColor: '#f0f2f5' }}>
-      <Link to={`/recipes/${recipe._id}`}>
-        {(recipe.imageUrl || recipe.image) && (
-          <Card.Img
-            src={recipe.imageUrl || recipe.image}
-            variant="top"
-            style={{ height: '200px', objectFit: 'cover' }}
-          />
-        )}
-      </Link>
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-start">
-          <Link to={`/recipes/${recipe._id}`}>
-            <Card.Title as="div">
-              <strong>{recipe.title}</strong>
-            </Card.Title>
-          </Link>
-          {showFavoriteButton && user && (
-            <Button
-              variant="link"
-              className="p-0 ms-2"
-              onClick={handleFavoriteToggle}
-              disabled={loading}
-              aria-label="Toggle favorite"
-            >
-              <i
-                className={`fa${isFavorited ? 's' : 'r'} fa-heart`}
-                style={{ color: isFavorited ? 'red' : 'gray', fontSize: '1.3rem' }}
-              ></i>
-            </Button>
-          )}
-        </div>
+    <div className="border shadow p-4 rounded space-y-2">
+      {recipe.imageUrl && (
+        <img src={recipe.imageUrl} alt={recipe.title} className="h-48 w-full object-cover rounded" />
+      )}
 
-        <Card.Text as="div">
-          <div className="my-2">
-            {recipe.averageRating > 0 ? (
-              <span>
-                {recipe.averageRating.toFixed(1)}{' '}
-                <i className="fas fa-star" style={{ color: 'gold' }}></i>{' '}
-                ({recipe.numReviews} reviews)
-              </span>
-            ) : (
-              <span>No ratings yet</span>
-            )}
-          </div>
-        </Card.Text>
+      <h2 className="text-xl font-bold">{recipe.title}</h2>
+      <p className="text-gray-600">{recipe.description}</p>
 
-        <Card.Text as="p">{recipe.description?.substring(0, 100)}...</Card.Text>
+      <p className="text-sm text-gray-500">
+        By {recipe.creatorName || 'Unknown'} | {new Date(recipe.createdAt).toLocaleDateString()}
+      </p>
 
-        {recipe.category && (
-          <Link to={`/?category=${encodeURIComponent(recipe.category)}`}>
-            <Badge bg="info" className="me-2">{recipe.category}</Badge>
-          </Link>
-        )}
-
-        {recipe.tags && recipe.tags.map((tag, idx) => (
-          <Link key={idx} to={`/?tag=${encodeURIComponent(tag)}`}>
-            <Badge bg="secondary" className="me-1">#{tag}</Badge>
-          </Link>
-        ))}
-      </Card.Body>
-    </Card>
+      <div className="flex gap-4 mt-2">
+        <button onClick={handleLike} className={`px-3 py-1 border rounded ${liked ? 'bg-blue-100' : ''}`}>
+          👍 {likes}
+        </button>
+        <button onClick={handleFavorite} className="px-3 py-1 border rounded">
+          ⭐ {isFavoriteList || favorite ? 'Unfavorite' : 'Favorite'}
+        </button>
+      </div>
+    </div>
   );
 };
 
