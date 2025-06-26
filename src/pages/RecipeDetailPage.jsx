@@ -3,25 +3,25 @@ import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Container, Spinner, Button, Form } from 'react-bootstrap';
 import { toast } from 'sonner';
 import recipeService from '../services/recipeService';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading, setFavorites } = useAuth();
+  const { user, loading, favorites, setFavorites } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
   const [loadingRecipe, setLoadingRecipe] = useState(true);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-  const [favorite, setFavorite] = useState(false);
+
+  const isFavorite = favorites.includes(id);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const data = await recipeService.getRecipeById(id);
         setRecipe(data);
-        setFavorite(data.favorites?.includes(user._id));
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
@@ -50,12 +50,9 @@ const RecipeDetailPage = () => {
   const handleFavoriteToggle = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      setFavorite((prev) => !prev);
-      toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
-
-      // Refresh favorites for global sync
       const updatedFavorites = await recipeService.refreshFavorites();
-      setFavorites(updatedFavorites);
+      setFavorites(updatedFavorites.map(r => r._id));
+      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to toggle favorite');
     }
@@ -75,16 +72,12 @@ const RecipeDetailPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" />
       </Container>
     );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
   }
 
   if (loadingRecipe) {
@@ -145,8 +138,8 @@ const RecipeDetailPage = () => {
       </div>
 
       <div className="mb-3">
-        <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
-          {favorite ? 'Unfavorite' : 'Favorite'}
+        <Button variant={isFavorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
+          {isFavorite ? 'Unfavorite' : 'Favorite'}
         </Button>
       </div>
 
@@ -187,7 +180,7 @@ const RecipeDetailPage = () => {
         {recipe.comments && recipe.comments.length > 0 ? (
           recipe.comments.map((c, idx) => (
             <div key={idx} className="mb-2">
-              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.comment} ({c.rating} ★)
+              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.text} ({c.stars} ★)
             </div>
           ))
         ) : (

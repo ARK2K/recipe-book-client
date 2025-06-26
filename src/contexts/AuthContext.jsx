@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
               headers: { Authorization: `Bearer ${token}` },
             });
             setUser(profileRes.data);
-            setFavorites(profileRes.data.favorites || []);
+            setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
           }
         } catch (err) {
           logout();
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       setUser(profileRes.data);
-      setFavorites(profileRes.data.favorites || []);
+      setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
     } catch (err) {
       logout();
     }
