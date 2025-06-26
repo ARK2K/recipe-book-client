@@ -49,9 +49,9 @@ const recipeService = {
   },
 
   refreshFavorites: async () => {
-    const response = await axiosInstance.get('/api/recipes/favorites');
-    return response.data.map(r => r._id);
-  }
+    const response = await axiosInstance.get('/api/users/favorites');
+    return response.data;
+  },
 };
 
 export default recipeService;

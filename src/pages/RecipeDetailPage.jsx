@@ -37,6 +37,7 @@ const RecipeDetailPage = () => {
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
+
     try {
       await recipeService.deleteRecipe(id);
       toast.success('Recipe deleted successfully');
@@ -49,10 +50,12 @@ const RecipeDetailPage = () => {
   const handleFavoriteToggle = async () => {
     try {
       await recipeService.toggleFavorite(id);
+      setFavorite((prev) => !prev);
+      toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
+
+      // Refresh favorites for global sync
       const updatedFavorites = await recipeService.refreshFavorites();
       setFavorites(updatedFavorites);
-      setFavorite(prev => !prev);
-      toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to toggle favorite');
     }
