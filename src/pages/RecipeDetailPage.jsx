@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Spinner, Button, Form } from 'react-bootstrap';
 import { toast } from 'sonner';
 import recipeService from '../services/recipeService';
@@ -21,9 +21,9 @@ const RecipeDetailPage = () => {
       try {
         const data = await recipeService.getRecipeById(id);
         setRecipe(data);
-        setFavorite(data.favorites?.includes(user?._id));
+        setFavorite(user ? data.favorites?.includes(user._id) : false);
       } catch (err) {
-        console.error('Fetch Error:', err);
+        console.error(err);
         toast.error(err.response?.data?.message || 'Failed to load recipe');
         navigate('/');
       } finally {
@@ -31,33 +31,31 @@ const RecipeDetailPage = () => {
       }
     };
 
-    if (user && id) {
+    if (!loading && id) {
       fetchRecipe();
     }
-  }, [id, user, navigate]);
+  }, [id, loading, user, navigate]);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
-
     try {
       await recipeService.deleteRecipe(id);
-      toast.success('Recipe deleted successfully');
+      toast.success('Recipe deleted');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete recipe');
+      toast.error('Failed to delete recipe');
     }
   };
 
   const handleFavoriteToggle = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      setFavorite((prev) => !prev);
+      setFavorite(!favorite);
       toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
-
       const updatedFavorites = await recipeService.refreshFavorites();
       setFavorites(updatedFavorites);
     } catch (err) {
-      toast.error('Failed to toggle favorite');
+      toast.error('Failed to update favorite');
     }
   };
 
@@ -65,36 +63,28 @@ const RecipeDetailPage = () => {
     e.preventDefault();
     try {
       await recipeService.submitComment(id, { comment, rating });
-      toast.success('Comment added!');
+      toast.success('Comment added');
       setComment('');
       setRating(0);
       const updatedRecipe = await recipeService.getRecipeById(id);
       setRecipe(updatedRecipe);
     } catch (err) {
-      toast.error('Failed to submit comment');
+      toast.error('Failed to add comment');
     }
   };
 
-  if (loading || !user) {
+  if (loading || loadingRecipe) {
     return (
       <Container className="text-center mt-5">
-        <Spinner animation="border" role="status" />
-      </Container>
-    );
-  }
-
-  if (loadingRecipe) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" role="status" />
+        <Spinner animation="border" />
       </Container>
     );
   }
 
   if (!recipe) {
     return (
-      <Container className="mt-5 text-center">
-        <p>Recipe not found.</p>
+      <Container className="text-center mt-5">
+        <h2>Recipe not found</h2>
       </Container>
     );
   }
@@ -105,35 +95,27 @@ const RecipeDetailPage = () => {
       <p><strong>By:</strong> {recipe.creatorName || 'Unknown'}</p>
 
       <div className="row">
-        <div className="col-12 col-md-6">
+        <div className="col-md-6">
           <p><strong>Description:</strong> {recipe.description}</p>
           <p><strong>Category:</strong> {recipe.category || 'N/A'}</p>
           <p><strong>Ingredients:</strong></p>
           <ul>
-            {recipe.ingredients?.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
+            {recipe.ingredients?.map((item, i) => <li key={i}>{item}</li>)}
           </ul>
           <p><strong>Instructions:</strong></p>
           <p>{recipe.instructions}</p>
         </div>
 
-        <div className="col-12 col-md-6">
+        <div className="col-md-6">
           {(recipe.imageUrl || recipe.image) ? (
-            <div className="mb-3 text-center">
-              <img
-                src={recipe.imageUrl || recipe.image}
-                alt="Recipe"
-                style={{
-                  width: '100%',
-                  maxHeight: '400px',
-                  objectFit: 'cover',
-                  borderRadius: '8px',
-                }}
-              />
-            </div>
+            <img
+              src={recipe.imageUrl || recipe.image}
+              alt="Recipe"
+              className="img-fluid mb-3"
+              style={{ maxHeight: '400px', objectFit: 'cover' }}
+            />
           ) : (
-            <div className="text-center text-muted mb-3">No image available</div>
+            <div className="text-muted">No image available</div>
           )}
         </div>
       </div>
@@ -142,56 +124,56 @@ const RecipeDetailPage = () => {
         <strong>Average Rating:</strong> {recipe.averageRating?.toFixed(1) || 0} ({recipe.numReviews || 0} reviews)
       </div>
 
-      <div className="mb-3">
-        <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
-          {favorite ? 'Unfavorite' : 'Favorite'}
-        </Button>
-      </div>
+      {user && (
+        <div className="mb-3">
+          <Button variant={favorite ? 'danger' : 'outline-danger'} onClick={handleFavoriteToggle}>
+            {favorite ? 'Unfavorite' : 'Favorite'}
+          </Button>
+        </div>
+      )}
 
-      <Form onSubmit={handleCommentSubmit}>
-        <Form.Group className="mb-2">
-          <Form.Label>Your Rating:</Form.Label>
-          <div>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Button
-                key={star}
-                variant={rating >= star ? 'warning' : 'outline-secondary'}
-                size="sm"
-                onClick={() => setRating(star)}
-                className="me-1"
-                type="button"
-              >
-                ★
-              </Button>
-            ))}
-          </div>
-        </Form.Group>
+      {user && (
+        <Form onSubmit={handleCommentSubmit}>
+          <Form.Group className="mb-2">
+            <Form.Label>Your Rating:</Form.Label>
+            <div>
+              {[1, 2, 3, 4, 5].map(star => (
+                <Button
+                  key={star}
+                  variant={rating >= star ? 'warning' : 'outline-secondary'}
+                  size="sm"
+                  onClick={() => setRating(star)}
+                  className="me-1"
+                  type="button"
+                >
+                  ★
+                </Button>
+              ))}
+            </div>
+          </Form.Group>
 
-        <Form.Group className="mb-2">
-          <Form.Control
-            as="textarea"
-            rows={2}
-            placeholder="Leave a comment"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            required
-          />
-        </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Control
+              as="textarea"
+              rows={2}
+              placeholder="Leave a comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-        <Button type="submit" variant="primary">Submit</Button>
-      </Form>
+          <Button type="submit">Submit</Button>
+        </Form>
+      )}
 
       <div className="mt-4">
         <h5>Comments</h5>
-        {recipe.comments?.length > 0 ? (
-          recipe.comments.map((c, idx) => (
-            <div key={idx} className="mb-2">
-              <strong>{c.user?.name || 'Anonymous'}:</strong> {c.comment} ({c.rating} ★)
-            </div>
-          ))
-        ) : (
-          <p>No comments yet.</p>
-        )}
+        {recipe.comments?.length ? recipe.comments.map((c, idx) => (
+          <div key={idx} className="mb-2">
+            <strong>{c.user?.name || 'Anonymous'}:</strong> {c.comment} ({c.rating} ★)
+          </div>
+        )) : <p>No comments yet.</p>}
       </div>
 
       {user && recipe.creatorId === user._id && (
