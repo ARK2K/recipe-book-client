@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 const RecipeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, setFavorites } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
   const [loadingRecipe, setLoadingRecipe] = useState(true);
@@ -37,7 +37,6 @@ const RecipeDetailPage = () => {
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this recipe?')) return;
-
     try {
       await recipeService.deleteRecipe(id);
       toast.success('Recipe deleted successfully');
@@ -50,7 +49,9 @@ const RecipeDetailPage = () => {
   const handleFavoriteToggle = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      setFavorite((prev) => !prev);
+      const updatedFavorites = await recipeService.refreshFavorites();
+      setFavorites(updatedFavorites);
+      setFavorite(prev => !prev);
       toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to toggle favorite');
@@ -105,7 +106,6 @@ const RecipeDetailPage = () => {
       <p><strong>By:</strong> {recipe.creatorName}</p>
 
       <div className="row">
-        {/* Left Section */}
         <div className="col-12 col-md-6">
           <p><strong>Description:</strong> {recipe.description}</p>
           <p><strong>Category:</strong> {recipe.category || 'N/A'}</p>
@@ -119,7 +119,6 @@ const RecipeDetailPage = () => {
           <p>{recipe.instructions}</p>
         </div>
 
-        {/* Right Section */}
         <div className="col-12 col-md-6">
           {(recipe.imageUrl || recipe.image) && (
             <div className="mb-3 text-center">

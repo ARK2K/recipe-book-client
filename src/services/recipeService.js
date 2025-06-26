@@ -47,6 +47,11 @@ const recipeService = {
     const response = await axiosInstance.post(`/api/recipes/${id}/comment`, { comment, rating });
     return response.data;
   },
+
+  refreshFavorites: async () => {
+    const response = await axiosInstance.get('/api/recipes/favorites');
+    return response.data.map(r => r._id);
+  }
 };
 
 export default recipeService;

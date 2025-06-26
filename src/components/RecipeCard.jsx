@@ -1,21 +1,20 @@
 import { Card, Badge, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import axiosInstance from '../utils/axiosInstance';
+import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 
 const RecipeCard = ({ recipe, isFavorited = false, showFavoriteButton = false }) => {
-  const { user, token, favorites, setFavorites } = useAuth();
+  const { user, favorites, setFavorites } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleFavoriteToggle = async () => {
     if (!user) return;
     try {
       setLoading(true);
-      const res = await axiosInstance.post(`/api/users/favorites/${recipe._id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setFavorites(res.data.favorites);
+      await recipeService.toggleFavorite(recipe._id);
+      const updatedFavorites = await recipeService.refreshFavorites();
+      setFavorites(updatedFavorites);
     } catch (err) {
       console.error('Error toggling favorite:', err);
     } finally {
