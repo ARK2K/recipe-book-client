@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Container, Spinner, Button, Form } from 'react-bootstrap';
 import { toast } from 'sonner';
 import recipeService from '../services/recipeService';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();

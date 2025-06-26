@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import recipeService from '../services/recipeService';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
