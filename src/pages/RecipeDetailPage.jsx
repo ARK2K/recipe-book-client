@@ -33,7 +33,7 @@ const RecipeDetailPage = () => {
   if (!recipe) return <p className="text-center mt-4">Recipe not found.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
+    <div className="max-w-3xl mx-auto p-4 bg-white text-black rounded shadow">
       <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
       <p className="text-gray-600 mb-4">By {recipe.creatorName || recipe.user?.name}</p>
 
@@ -59,7 +59,7 @@ const RecipeDetailPage = () => {
           <h2 className="text-xl font-semibold mb-2">Comments</h2>
           <ul className="space-y-2">
             {recipe.comments.map((c) => (
-              <li key={c._id} className="border p-2 rounded">
+              <li key={c._id} className="border p-2 rounded bg-gray-50">
                 <p><strong>{c.user?.name || 'Anonymous'}</strong> ({c.stars}★)</p>
                 <p>{c.text}</p>
               </li>
