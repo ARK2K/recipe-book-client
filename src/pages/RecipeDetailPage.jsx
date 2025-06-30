@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance";
-import { useAuth } from "../contexts/AuthContext";
-import Loader from "../components/Loader";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axiosInstance from '../utils/axiosInstance';
+import { useAuth } from '../context/AuthContext';
+import Loader from '../components/Loader';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const { user, token } = useAuth();
-
+  const { loading: authLoading } = useAuth();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -18,8 +16,7 @@ const RecipeDetailPage = () => {
         const { data } = await axiosInstance.get(`/api/recipes/${id}`);
         setRecipe(data);
       } catch (err) {
-        console.error(err);
-        setError("Failed to load recipe.");
+        console.error('Error fetching recipe:', err);
       } finally {
         setLoading(false);
       }
@@ -28,40 +25,44 @@ const RecipeDetailPage = () => {
     fetchRecipe();
   }, [id]);
 
-  if (loading) return <Loader />;
+  if (loading || authLoading) return <Loader />;
 
-  if (error) return <p className="text-center text-red-500">{error}</p>;
-
-  if (!recipe) return <p className="text-center">Recipe not found.</p>;
+  if (!recipe) return <p className="text-center mt-4">Recipe not found.</p>;
 
   return (
-    <div className="max-w-3xl mx-auto mt-8 p-4">
-      <h1 className="text-3xl font-bold mb-4">{recipe.title}</h1>
-      <p className="mb-4">{recipe.description}</p>
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
+      <p className="text-gray-600 mb-4">By {recipe.creatorName || recipe.user?.name}</p>
+      
       {recipe.image && (
-        <img src={recipe.image} alt={recipe.title} className="w-full mb-4" />
+        <img src={recipe.image} alt={recipe.title} className="w-full h-auto mb-4 rounded" />
       )}
-      <h2 className="text-xl font-semibold mb-2">Ingredients:</h2>
+
+      <h2 className="text-xl font-semibold mb-2">Description</h2>
+      <p className="mb-4">{recipe.description}</p>
+
+      <h2 className="text-xl font-semibold mb-2">Ingredients</h2>
       <ul className="list-disc list-inside mb-4">
-        {recipe.ingredients.map((item, idx) => (
-          <li key={idx}>{item}</li>
+        {recipe.ingredients?.map((ing, idx) => (
+          <li key={idx}>{ing}</li>
         ))}
       </ul>
-      <h2 className="text-xl font-semibold mb-2">Instructions:</h2>
+
+      <h2 className="text-xl font-semibold mb-2">Instructions</h2>
       <p className="mb-4">{recipe.instructions}</p>
 
-      <h2 className="text-xl font-semibold mb-2">Comments:</h2>
-      {recipe.comments.length === 0 ? (
-        <p>No comments yet.</p>
+      <h2 className="text-xl font-semibold mb-2">Comments</h2>
+      {recipe.comments?.length ? (
+        <ul className="space-y-2">
+          {recipe.comments.map((c) => (
+            <li key={c._id} className="border p-2 rounded">
+              <p><strong>{c.user?.name || 'Anonymous'}</strong> ({c.stars}★)</p>
+              <p>{c.text}</p>
+            </li>
+          ))}
+        </ul>
       ) : (
-        recipe.comments.map((comment) => (
-          <div key={comment._id} className="border-b py-2">
-            <p>
-              <strong>{comment.user?.name || "User"}</strong>: {comment.text} -{" "}
-              {comment.stars}⭐
-            </p>
-          </div>
-        ))
+        <p>No comments yet.</p>
       )}
     </div>
   );
