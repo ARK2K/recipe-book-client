@@ -54,18 +54,18 @@ const RecipeDetailPage = () => {
       <h2 className="text-xl font-semibold mb-2">Instructions</h2>
       <p className="mb-4">{recipe.instructions}</p>
 
-      <h2 className="text-xl font-semibold mb-2">Comments</h2>
-      {recipe.comments?.length ? (
-        <ul className="space-y-2">
-          {recipe.comments.map((c) => (
-            <li key={c._id} className="border p-2 rounded">
-              <p><strong>{c.user?.name || 'Anonymous'}</strong> ({c.stars}★)</p>
-              <p>{c.text}</p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No comments yet.</p>
+      {recipe.comments?.length > 0 && (
+        <>
+          <h2 className="text-xl font-semibold mb-2">Comments</h2>
+          <ul className="space-y-2">
+            {recipe.comments.map((c) => (
+              <li key={c._id} className="border p-2 rounded">
+                <p><strong>{c.user?.name || 'Anonymous'}</strong> ({c.stars}★)</p>
+                <p>{c.text}</p>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
