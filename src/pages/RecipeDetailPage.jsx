@@ -13,7 +13,9 @@ const RecipeDetailPage = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
+        console.log('Fetching recipe with id:', id);
         const { data } = await axiosInstance.get(`/api/recipes/${id}`);
+        console.log('Fetched recipe data:', data);
         setRecipe(data);
       } catch (err) {
         console.error('Error fetching recipe:', err);
