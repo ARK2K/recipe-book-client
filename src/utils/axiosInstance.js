@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
+const baseURL = import.meta.env.VITE_API_URL;
 
-console.log ('API Base URL:', import.meta.env.VITE_API_URL);
+console.log('🌍 API_BASE_URL =', baseURL);
+
+const axiosInstance = axios.create({
+  baseURL,
+});
 
 axiosInstance.interceptors.request.use(
   (config) => {
