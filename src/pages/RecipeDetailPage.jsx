@@ -10,7 +10,7 @@ const RecipeDetailPage = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const { data } = await axiosInstance.get(`/recipe/${id}`);
+        const { data } = await axiosInstance.get(`/api/recipes/${id}`);
         setRecipe(data);
       } catch (error) {
         console.error(error);
@@ -26,9 +26,9 @@ const RecipeDetailPage = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">{recipe.title}</h1>
-      {recipe.image && (
+      {recipe.imageUrl && (
         <img
-          src={recipe.image}
+          src={recipe.imageUrl}
           alt={recipe.title}
           className="w-full max-w-md mb-4"
         />
