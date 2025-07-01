@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
-import { toast } from 'sonner';
+import Loader from '../components/Loader';
 
-const RecipeDetailPage = () => {
+function RecipeDetailPage() {
   const { id } = useParams();
   const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -13,37 +14,34 @@ const RecipeDetailPage = () => {
         const { data } = await axiosInstance.get(`/api/recipes/${id}`);
         setRecipe(data);
       } catch (error) {
-        console.error(error);
-        toast.error(error?.response?.data?.message || 'Failed to fetch recipe');
+        console.error('Failed to fetch recipe:', error);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchRecipe();
   }, [id]);
 
-  if (!recipe) return <div>Loading...</div>;
+  if (loading) return <Loader />;
+  if (!recipe) return <p className="text-danger">Recipe not found.</p>;
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-4">{recipe.title}</h1>
-      {recipe.imageUrl && (
-        <img
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          className="w-full max-w-md mb-4"
-        />
-      )}
-      <p className="mb-2">
-        <strong>Description:</strong> {recipe.description}
-      </p>
-      <p className="mb-2">
-        <strong>Ingredients:</strong> {recipe.ingredients}
-      </p>
-      <p>
-        <strong>Instructions:</strong> {recipe.instructions}
-      </p>
+    <div>
+      <h2>{recipe.title}</h2>
+      {recipe.imageUrl && <img src={recipe.imageUrl} alt={recipe.title} className="img-fluid my-3" />}
+      <p><strong>Category:</strong> {recipe.category}</p>
+      <p><strong>Description:</strong> {recipe.description}</p>
+      <p><strong>Ingredients:</strong></p>
+      <ul>
+        {recipe.ingredients?.map((ing, idx) => (
+          <li key={idx}>{ing}</li>
+        ))}
+      </ul>
+      <p><strong>Instructions:</strong></p>
+      <p>{recipe.instructions}</p>
+      <p><strong>Created By:</strong> {recipe.creatorName}</p>
     </div>
   );
-};
+}
 
 export default RecipeDetailPage;
