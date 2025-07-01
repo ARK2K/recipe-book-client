@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance";
-import { useAuth } from "../contexts/AuthContext";
-import Loader from "../components/Loader";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axiosInstance from '../utils/axiosInstance';
+import { useAuth } from '../contexts/AuthContext';
+import Loader from '../components/Loader';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
@@ -11,24 +11,22 @@ const RecipeDetailPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("RecipeDetailPage Mounted, ID:", id);
-
     const fetchRecipe = async () => {
-      console.log("Fetching Recipe with ID:", id);
+      console.log('Fetching recipe with ID:', id);
+      console.log('API Base URL:', import.meta.env.VITE_API_URL);
 
       try {
         const { data } = await axiosInstance.get(`/api/recipes/${id}`);
-        console.log("Recipe Data Fetched:", data);
+        console.log('Recipe data received:', data);
         setRecipe(data);
       } catch (err) {
-        console.error("Error Fetching Recipe:", err.response?.data || err.message);
+        console.error('Error fetching recipe:', err.response || err.message);
       } finally {
         setLoading(false);
       }
     };
 
     if (id) fetchRecipe();
-    else console.warn("No recipe ID found in URL params");
   }, [id]);
 
   if (loading || authLoading) return <Loader />;
@@ -62,9 +60,7 @@ const RecipeDetailPage = () => {
         <ul className="space-y-2">
           {recipe.comments.map((c) => (
             <li key={c._id} className="border p-2 rounded">
-              <p>
-                <strong>{c.user?.name || "Anonymous"}</strong> ({c.stars}★)
-              </p>
+              <p><strong>{c.user?.name || 'Anonymous'}</strong> ({c.stars}★)</p>
               <p>{c.text}</p>
             </li>
           ))}
