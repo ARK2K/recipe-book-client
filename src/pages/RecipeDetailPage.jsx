@@ -8,6 +8,7 @@ function RecipeDetailPage() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
+  const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -27,12 +28,17 @@ function RecipeDetailPage() {
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
+
     try {
       setSubmitting(true);
-      await axiosInstance.post(`/api/recipes/${id}/comment`, { comment: commentText });
+      await axiosInstance.post(`/api/recipes/${id}/comment`, {
+        comment: commentText,
+        rating: rating || 0,
+      });
       const { data } = await axiosInstance.get(`/api/recipes/${id}`);
       setRecipe(data);
       setCommentText('');
+      setRating(0);
     } catch (error) {
       console.error('Failed to post comment:', error);
     } finally {
@@ -46,7 +52,9 @@ function RecipeDetailPage() {
   return (
     <div>
       <h2>{recipe.title}</h2>
-      {recipe.imageUrl && <img src={recipe.imageUrl} alt={recipe.title} className="img-fluid my-3" />}
+      {recipe.imageUrl && (
+        <img src={recipe.imageUrl} alt={recipe.title} className="img-fluid my-3" />
+      )}
       <p><strong>Category:</strong> {recipe.category}</p>
       <p><strong>Description:</strong> {recipe.description}</p>
       <p><strong>Ingredients:</strong></p>
@@ -60,19 +68,7 @@ function RecipeDetailPage() {
       <p><strong>Created By:</strong> {recipe.creatorName}</p>
 
       <hr />
-      <h4>Comments</h4>
-      {recipe.comments?.length > 0 ? (
-        <ul className="list-group mb-3">
-          {recipe.comments.map((c) => (
-            <li key={c._id} className="list-group-item">
-              <strong>{c.user?.name || 'User'}:</strong> {c.text}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No comments yet.</p>
-      )}
-
+      <h4>Add a Comment</h4>
       <form onSubmit={handleCommentSubmit}>
         <div className="mb-3">
           <textarea
@@ -84,10 +80,40 @@ function RecipeDetailPage() {
             required
           />
         </div>
+        <div className="mb-3">
+          <label>Rating:</label>
+          <select
+            className="form-select"
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+          >
+            <option value={0}>Select rating</option>
+            <option value={1}>⭐ 1 Star</option>
+            <option value={2}>⭐⭐ 2 Stars</option>
+            <option value={3}>⭐⭐⭐ 3 Stars</option>
+            <option value={4}>⭐⭐⭐⭐ 4 Stars</option>
+            <option value={5}>⭐⭐⭐⭐⭐ 5 Stars</option>
+          </select>
+        </div>
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Posting...' : 'Post Comment'}
         </button>
       </form>
+
+      <hr />
+      <h4>Comments</h4>
+      {recipe.comments?.length > 0 ? (
+        <ul className="list-group mb-3">
+          {recipe.comments.map((c) => (
+            <li key={c._id} className="list-group-item">
+              <strong>{c.user?.name || 'User'}:</strong> {c.text} <br />
+              <small>Rating: {c.stars} ⭐</small>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No comments yet.</p>
+      )}
     </div>
   );
 }
