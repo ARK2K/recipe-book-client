@@ -1,121 +1,110 @@
-import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
-import Loader from '../components/Loader';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
-function RecipeDetailPage() {
+const RecipeDetailPage = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [recipe, setRecipe] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [rating, setRating] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRecipe = async () => {
-      try {
-        const { data } = await axiosInstance.get(`/api/recipes/${id}`);
-        setRecipe(data);
-      } catch (error) {
-        console.error('Failed to fetch recipe:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRecipe();
-  }, [id]);
-
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-
+  const fetchRecipe = async () => {
     try {
-      setSubmitting(true);
-      await axiosInstance.post(`/api/recipes/${id}/comment`, {
-        comment: commentText,
-        rating: rating || 0,
-      });
       const { data } = await axiosInstance.get(`/api/recipes/${id}`);
       setRecipe(data);
-      setCommentText('');
-      setRating(0);
-    } catch (error) {
-      console.error('Failed to post comment:', error);
+    } catch (err) {
+      toast.error('Failed to load recipe');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (loading) return <Loader />;
-  if (!recipe) return <p className="text-danger">Recipe not found.</p>;
+  useEffect(() => {
+    fetchRecipe();
+  }, [id]);
+
+  const handleCommentSubmit = async e => {
+    e.preventDefault();
+    if (!commentText) return;
+
+    try {
+      await axiosInstance.post(`/api/recipes/${id}/comment`, {
+        comment: commentText,
+        rating
+      });
+      toast.success('Comment added');
+      setCommentText('');
+      setRating(0);
+      fetchRecipe();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add comment');
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (!recipe) return <p>Recipe not found</p>;
 
   return (
-    <div>
+    <div className="container mt-4">
       <h2>{recipe.title}</h2>
-      {recipe.imageUrl && (
-        <img src={recipe.imageUrl} alt={recipe.title} className="img-fluid my-3" />
-      )}
-      <p><strong>Category:</strong> {recipe.category}</p>
-      <p><strong>Description:</strong> {recipe.description}</p>
-      <p><strong>Ingredients:</strong></p>
+      <p>{recipe.description}</p>
+      <img src={recipe.imageUrl || recipe.image} alt={recipe.title} className="img-fluid mb-3" />
+      <h4>Ingredients:</h4>
       <ul>
-        {recipe.ingredients?.map((ing, idx) => (
-          <li key={idx}>{ing}</li>
-        ))}
+        {recipe.ingredients.map((ing, idx) => <li key={idx}>{ing}</li>)}
       </ul>
-      <p><strong>Instructions:</strong></p>
+      <h4>Instructions:</h4>
       <p>{recipe.instructions}</p>
-      <p><strong>Created By:</strong> {recipe.creatorName}</p>
 
       <hr />
-      <h4>Add a Comment</h4>
-      <form onSubmit={handleCommentSubmit}>
-        <div className="mb-3">
-          <textarea
-            className="form-control"
-            rows="3"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Write your comment"
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label>Rating:</label>
-          <select
-            className="form-select"
-            value={rating}
-            onChange={(e) => setRating(Number(e.target.value))}
-          >
-            <option value={0}>Select rating</option>
-            <option value={1}>⭐ 1 Star</option>
-            <option value={2}>⭐⭐ 2 Stars</option>
-            <option value={3}>⭐⭐⭐ 3 Stars</option>
-            <option value={4}>⭐⭐⭐⭐ 4 Stars</option>
-            <option value={5}>⭐⭐⭐⭐⭐ 5 Stars</option>
-          </select>
-        </div>
-        <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'Posting...' : 'Post Comment'}
-        </button>
-      </form>
 
-      <hr />
-      <h4>Comments</h4>
+      {user && (
+        <form onSubmit={handleCommentSubmit} className="mb-4">
+          <div className="mb-2">
+            <textarea
+              className="form-control"
+              placeholder="Leave a comment"
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-2">
+            <select
+              className="form-select"
+              value={rating}
+              onChange={e => setRating(Number(e.target.value))}
+            >
+              <option value="0">Select rating (optional)</option>
+              {[1, 2, 3, 4, 5].map(r => (
+                <option key={r} value={r}>{r} Star{r > 1 && 's'}</option>
+              ))}
+            </select>
+          </div>
+          <button className="btn btn-primary" type="submit">Post Comment</button>
+        </form>
+      )}
+
+      <h5>Comments:</h5>
       {recipe.comments?.length > 0 ? (
-        <ul className="list-group mb-3">
-          {recipe.comments.map((c) => (
-            <li key={c._id} className="list-group-item">
-              <strong>{c.user?.name || 'User'}:</strong> {c.text} <br />
-              <small>Rating: {c.stars} ⭐</small>
-            </li>
-          ))}
-        </ul>
+        recipe.comments.map((c, idx) => (
+          <div key={idx} className="card mb-2 p-2">
+            <strong>{c.user?.name || 'User'}:</strong> {c.text}
+            {c.stars > 0 && <div>Rating: {c.stars} ⭐</div>}
+            <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+              {c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}
+            </div>
+          </div>
+        ))
       ) : (
         <p>No comments yet.</p>
       )}
     </div>
   );
-}
+};
 
 export default RecipeDetailPage;
