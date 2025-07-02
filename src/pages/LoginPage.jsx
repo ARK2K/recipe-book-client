@@ -28,6 +28,7 @@ const LoginPage = () => {
 
     try {
       const { data } = await axiosInstance.post('/api/users/login', form);
+      localStorage.setItem('token', data.token);
       login(data);
       toast.success('Logged in successfully');
       navigate('/');
