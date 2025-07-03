@@ -40,7 +40,7 @@ const RecipeDetailPage = () => {
     if (!commentText) return;
 
     try {
-      await recipeService.addComment(id, { comment: commentText, rating });
+      await recipeService.submitComment(id, { comment: commentText, rating });
       toast.success('Comment added');
       setCommentText('');
       setRating(0);
