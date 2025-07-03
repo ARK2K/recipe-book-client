@@ -40,7 +40,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+            <Route path="/recipes/:id" element={<RecipeDetailPage />} />
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/recipes/new" element={<AddRecipePage />} />
