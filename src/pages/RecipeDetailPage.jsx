@@ -30,10 +30,8 @@ const RecipeDetailPage = () => {
   }, [id]);
 
   useEffect(() => {
-    if (user) {
-      setIsFavorite(favorites.includes(id));
-    }
-  }, [favorites, id, user]);
+    setIsFavorite(favorites.includes(id));
+  }, [favorites, id]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();

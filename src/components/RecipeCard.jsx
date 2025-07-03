@@ -1,62 +1,53 @@
-import { useNavigate } from 'react-router-dom';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import recipeService from '../services/recipeService';
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 
-const RecipeCard = ({ recipe }) => {
-  const navigate = useNavigate();
-  const { user, favorites, setFavorites } = useAuth();
+const RecipeCard = ({ recipe, favorites, refreshFavorites }) => {
+  const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setIsFavorite(favorites.includes(recipe._id));
+    if (favorites?.some(fav => fav._id === recipe._id)) {
+      setIsFavorite(true);
+    } else {
+      setIsFavorite(false);
     }
-  }, [favorites, recipe._id, user]);
+  }, [favorites, recipe._id]);
 
-  const handleFavorite = async (e) => {
-    e.stopPropagation();
+  const handleFavorite = async () => {
     try {
       await recipeService.toggleFavorite(recipe._id);
-      const updatedFavorites = await recipeService.refreshFavorites();
-      setFavorites(updatedFavorites.map(r => r._id));
-    } catch {
-      toast.error('Failed to update favorites');
+      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+      refreshFavorites();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update favorites');
     }
   };
 
   return (
-    <div
-      className="border rounded-lg shadow hover:shadow-lg overflow-hidden relative cursor-pointer transition"
-      onClick={() => navigate(`/recipes/${recipe._id}`)}
-    >
-      {(recipe.imageUrl || recipe.image) ? (
-        <img
-          src={recipe.imageUrl || recipe.image}
-          alt={recipe.title}
-          className="w-full h-48 object-cover"
-        />
-      ) : (
-        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">No Image</span>
+    <div className="card h-100 shadow-sm">
+      {recipe.imageUrl && (
+        <img src={recipe.imageUrl} className="card-img-top" alt={recipe.title} />
+      )}
+      <div className="card-body d-flex flex-column">
+        <h5 className="card-title">{recipe.title}</h5>
+        <p className="card-text small text-muted">By {recipe.creatorName || 'Unknown'}</p>
+        <p className="card-text">{recipe.description}</p>
+        <div className="mt-auto d-flex justify-content-between align-items-center">
+          <Link to={`/recipes/${recipe._id}`} className="btn btn-primary btn-sm">
+            View Recipe
+          </Link>
+          {user && (
+            <button
+              className={`btn btn-sm ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}`}
+              onClick={handleFavorite}
+            >
+              {isFavorite ? '★ Favorite' : '☆ Favorite'}
+            </button>
+          )}
         </div>
-      )}
-
-      {user && (
-        <button
-          onClick={handleFavorite}
-          className="absolute top-2 right-2 text-red-500 text-xl z-10"
-        >
-          {isFavorite ? <FaHeart /> : <FaRegHeart />}
-        </button>
-      )}
-
-      <div className="p-4">
-        <h3 className="font-semibold text-lg mb-1">{recipe.title}</h3>
-        <p className="text-sm text-gray-600 line-clamp-2">{recipe.description}</p>
-        <div className="text-xs text-gray-500 mt-2">By: {recipe.creatorName || 'Unknown'}</div>
       </div>
     </div>
   );
