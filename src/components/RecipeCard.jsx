@@ -1,53 +1,51 @@
-import { Card, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import recipeService from '../services/recipeService';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-const RecipeCard = ({ recipe, isFavorited, showFavoriteButton }) => {
-  const navigate = useNavigate();
-  const { refreshFavorites } = useAuth();
+const RecipeCard = ({ recipe, refresh }) => {
+  const { user } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(recipe.isFavorite);
 
-  const handleFavorite = async (e) => {
-    e.stopPropagation();
+  const handleFavorite = async () => {
     try {
       await recipeService.toggleFavorite(recipe._id);
-      toast.success(
-        isFavorited ? 'Removed from favorites' : 'Added to favorites'
-      );
-      await refreshFavorites();
-    } catch {
-      toast.error('Failed to update favorites');
+      setIsFavorite(!isFavorite);
+      if (refresh) refresh();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to toggle favorite');
     }
   };
 
   return (
-    <Card className="h-100" onClick={() => navigate(`/recipes/${recipe._id}`)} style={{ cursor: 'pointer' }}>
-      {recipe.imageUrl && (
-        <Card.Img
-          variant="top"
-          src={recipe.imageUrl}
+    <div className="card h-100 d-flex flex-column justify-content-between">
+      {recipe.image && (
+        <img
+          src={recipe.image}
           alt={recipe.title}
-          style={{ objectFit: 'cover', height: '200px' }}
+          className="card-img-top"
+          style={{ height: '200px', objectFit: 'cover' }}
         />
       )}
-      <Card.Body>
-        <Card.Title>{recipe.title}</Card.Title>
-        <Card.Text>
-          {recipe.description.slice(0, 80)}...
-        </Card.Text>
-        {showFavoriteButton && (
-          <Button
-            variant="outline-danger"
+      <div className="card-body d-flex flex-column justify-content-between">
+        <h5 className="card-title">{recipe.title}</h5>
+        <p className="card-text">{recipe.description}</p>
+      </div>
+      <div className="card-footer d-flex justify-content-between align-items-center">
+        <Link to={`/recipes/${recipe._id}`} className="btn btn-sm btn-outline-primary">
+          View
+        </Link>
+        {user && (
+          <button
+            className={`btn btn-sm ${isFavorite ? 'btn-danger' : 'btn-outline-danger'}`}
             onClick={handleFavorite}
-            className="mt-2"
           >
-            {isFavorited ? <FaHeart /> : <FaRegHeart />} Favorite
-          </Button>
+            {isFavorite ? 'Unfavorite' : 'Favorite'}
+          </button>
         )}
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 
