@@ -1,59 +1,53 @@
-import { Link } from 'react-router-dom';
+import { Card, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import recipeService from '../services/recipeService';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
 
-const RecipeCard = ({ recipe, onFavoriteChange }) => {
-  const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
+const RecipeCard = ({ recipe, isFavorited, showFavoriteButton }) => {
+  const navigate = useNavigate();
+  const { refreshFavorites } = useAuth();
 
-  useEffect(() => {
-    if (user && recipe.favorites?.includes(user._id)) {
-      setIsFavorite(true);
-    } else {
-      setIsFavorite(false);
-    }
-  }, [recipe.favorites, user]);
-
-  const handleToggleFavorite = async () => {
+  const handleFavorite = async (e) => {
+    e.stopPropagation();
     try {
       await recipeService.toggleFavorite(recipe._id);
-      setIsFavorite((prev) => !prev);
-      if (onFavoriteChange) onFavoriteChange();
-      toast.success(!isFavorite ? 'Added to favorites' : 'Removed from favorites');
+      toast.success(
+        isFavorited ? 'Removed from favorites' : 'Added to favorites'
+      );
+      await refreshFavorites();
     } catch {
-      toast.error('Failed to toggle favorite');
+      toast.error('Failed to update favorites');
     }
   };
 
   return (
-    <div className="card h-100 shadow-sm">
+    <Card className="h-100" onClick={() => navigate(`/recipes/${recipe._id}`)} style={{ cursor: 'pointer' }}>
       {recipe.imageUrl && (
-        <img
+        <Card.Img
+          variant="top"
           src={recipe.imageUrl}
           alt={recipe.title}
-          className="card-img-top"
-          style={{ height: '200px', objectFit: 'cover' }}
+          style={{ objectFit: 'cover', height: '200px' }}
         />
       )}
-      <div className="card-body d-flex flex-column">
-        <h5 className="card-title">{recipe.title}</h5>
-        <p className="card-text small text-muted">
-          By {recipe.creatorName || 'Unknown'} | {recipe.averageRating?.toFixed(1) || 0} ⭐️
-        </p>
-        <div className="mt-auto d-flex justify-content-between align-items-center">
-          <Link to={`/recipes/${recipe._id}`} className="btn btn-sm btn-outline-primary">
-            View Details
-          </Link>
-          {user && (
-            <button className="btn btn-sm" onClick={handleToggleFavorite}>
-              {isFavorite ? '❤️' : '🤍'}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+      <Card.Body>
+        <Card.Title>{recipe.title}</Card.Title>
+        <Card.Text>
+          {recipe.description.slice(0, 80)}...
+        </Card.Text>
+        {showFavoriteButton && (
+          <Button
+            variant="outline-danger"
+            onClick={handleFavorite}
+            className="mt-2"
+          >
+            {isFavorited ? <FaHeart /> : <FaRegHeart />} Favorite
+          </Button>
+        )}
+      </Card.Body>
+    </Card>
   );
 };
 
