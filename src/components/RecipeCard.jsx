@@ -30,7 +30,7 @@ const RecipeCard = ({ recipe }) => {
   return (
     <div
       className="border rounded-lg shadow hover:shadow-lg overflow-hidden relative cursor-pointer transition"
-      onClick={() => navigate(`/recipe/${recipe._id}`)}
+      onClick={() => navigate(`/recipes/${recipe._id}`)}
     >
       {(recipe.imageUrl || recipe.image) ? (
         <img
