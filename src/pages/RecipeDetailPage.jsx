@@ -17,11 +17,13 @@ const RecipeDetailPage = () => {
   }, [id]);
 
   useEffect(() => {
-    if (user && recipe?.favorites?.includes(user._id)) {
-      setIsFavorite(true);
-    } else {
-      setIsFavorite(false);
-    }
+    const checkFavorite = async () => {
+      if (user) {
+        const favorites = await recipeService.getFavorites();
+        setIsFavorite(favorites.includes(id));
+      }
+    };
+    checkFavorite();
   }, [recipe, user]);
 
   const fetchRecipe = async () => {
@@ -50,9 +52,10 @@ const RecipeDetailPage = () => {
   const handleToggleFavorite = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      setIsFavorite((prev) => !prev);
+      const favorites = await recipeService.getFavorites();
+      setIsFavorite(favorites.includes(id));
       fetchRecipe();
-      toast.success(!isFavorite ? 'Added to favorites' : 'Removed from favorites');
+      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch {
       toast.error('Failed to toggle favorite');
     }

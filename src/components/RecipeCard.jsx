@@ -9,16 +9,23 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    setIsFavorite(recipe.favorites?.includes(user?._id));
+    const checkFavorite = async () => {
+      if (user) {
+        const favorites = await recipeService.getFavorites();
+        setIsFavorite(favorites.includes(recipe._id));
+      }
+    };
+    checkFavorite();
   }, [recipe, user]);
 
   const handleFavorite = async () => {
     if (!user) return toast.error('Login to favorite recipes');
     try {
       await recipeService.toggleFavorite(recipe._id);
-      const updatedFavorites = await recipeService.refreshFavorites();
+      const updatedFavorites = await recipeService.getFavorites();
+      setIsFavorite(updatedFavorites.includes(recipe._id));
       onFavoritesUpdate(updatedFavorites);
-      setIsFavorite(!isFavorite);
+      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch {
       toast.error('Failed to update favorites');
     }
@@ -26,6 +33,7 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
 
   return (
     <div className="card shadow-sm mb-3 h-100 d-flex flex-column">
+      
       <div className="w-100" style={{ flex: 1, overflow: 'hidden' }}>
         <img
           src={recipe.imageUrl || recipe.image}
@@ -47,7 +55,7 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
             className={`btn btn-sm ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}`}
             onClick={handleFavorite}
           >
-            {isFavorite ? 'Remove Favorite' : 'Add to Favorites'}
+            {isFavorite ? 'Unfavorite' : 'Favorite'}
           </button>
         </div>
       </div>
