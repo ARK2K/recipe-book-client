@@ -20,11 +20,7 @@ export const AuthProvider = ({ children }) => {
           if (isExpired) {
             await refreshToken();
           } else {
-            const profileRes = await axiosInstance.get('/api/users/profile', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            setUser(profileRes.data);
-            setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
+            await loadProfile();
           }
         } catch (err) {
           logout();
@@ -36,6 +32,14 @@ export const AuthProvider = ({ children }) => {
     checkToken();
   }, [token]);
 
+  const loadProfile = async () => {
+    const profileRes = await axiosInstance.get('/api/users/profile', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUser(profileRes.data);
+    setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
+  };
+
   const refreshToken = async () => {
     try {
       const { data } = await axiosInstance.get('/api/users/refresh', {
@@ -43,12 +47,7 @@ export const AuthProvider = ({ children }) => {
       });
       setToken(data.token);
       localStorage.setItem('token', data.token);
-
-      const profileRes = await axiosInstance.get('/api/users/profile', {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      setUser(profileRes.data);
-      setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
+      await loadProfile();
     } catch (err) {
       logout();
     }
@@ -77,7 +76,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, favorites, setFavorites }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        loading,
+        favorites,
+        setFavorites,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
