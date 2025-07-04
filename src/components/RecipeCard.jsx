@@ -1,58 +1,55 @@
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useEffect, useState } from 'react';
 import recipeService from '../services/recipeService';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const RecipeCard = ({ recipe, refreshFavorites }) => {
-  const navigate = useNavigate();
+const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
   const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(
-    recipe.favorites?.includes(user?._id)
-  );
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleFavorite = async (e) => {
-    e.stopPropagation();
+  useEffect(() => {
+    setIsFavorite(recipe.favorites?.includes(user?._id));
+  }, [recipe, user]);
+
+  const handleFavorite = async () => {
+    if (!user) return toast.error('Login to favorite recipes');
     try {
       await recipeService.toggleFavorite(recipe._id);
-      setIsFavorite((prev) => !prev);
-      refreshFavorites && refreshFavorites();
+      const updatedFavorites = await recipeService.refreshFavorites();
+      onFavoritesUpdate(updatedFavorites);
+      setIsFavorite(!isFavorite);
     } catch {
-      toast.error('Failed to update favorite');
+      toast.error('Failed to update favorites');
     }
   };
 
   return (
-    <div
-      className="card h-100 shadow-sm recipe-card"
-      onClick={() => navigate(`/recipes/${recipe._id}`)}
-      style={{ cursor: 'pointer' }}
-    >
-      {recipe.imageUrl && (
+    <div className="card shadow-sm mb-3 h-100 d-flex flex-column">
+      
+      <div className="w-100" style={{ flex: 1, overflow: 'hidden' }}>
         <img
-          src={recipe.imageUrl}
+          src={recipe.imageUrl || recipe.image}
+          className="w-100"
+          style={{ objectFit: 'cover', height: '100%' }}
           alt={recipe.title}
-          className="card-img-top"
-          style={{ objectFit: 'cover', height: '200px' }}
         />
-      )}
-      <div className="card-body d-flex flex-column">
-        <h5 className="card-title">{recipe.title}</h5>
-        <p className="card-text text-muted mb-2">
-          By {recipe.creatorName || 'Unknown'}
-        </p>
-        <div className="mt-auto d-flex justify-content-between align-items-center">
-          <small className="text-muted">
-            {recipe.averageRating?.toFixed(1) || 0} ⭐ ({recipe.numReviews})
-          </small>
-          {user && (
-            <button
-              className={`btn btn-sm ${isFavorite ? 'btn-success' : 'btn-outline-secondary'}`}
-              onClick={handleFavorite}
-            >
-              {isFavorite ? '★' : '☆'}
-            </button>
-          )}
+      </div>
+
+      <div className="card-body d-flex flex-column justify-content-between" style={{ flex: 1 }}>
+        <div>
+          <h5 className="card-title">{recipe.title}</h5>
+          <p className="card-text">By {recipe.creatorName || 'Unknown'}</p>
+        </div>
+
+        <div className="d-flex justify-content-between mt-3">
+          <Link to={`/recipes/${recipe._id}`} className="btn btn-outline-primary btn-sm">View</Link>
+          <button
+            className={`btn btn-sm ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}`}
+            onClick={handleFavorite}
+          >
+            {isFavorite ? 'Unfavorite' : 'Favorite'}
+          </button>
         </div>
       </div>
     </div>
