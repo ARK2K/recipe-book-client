@@ -11,29 +11,21 @@ const RecipeDetailPage = () => {
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    fetchRecipe();
-  }, [id]);
-
-  useEffect(() => {
-    const checkFavorite = async () => {
-      if (user) {
-        const favorites = await recipeService.getFavorites();
-        setIsFavorite(favorites.includes(id));
-      }
-    };
-    checkFavorite();
-  }, [recipe, user]);
+  const [loading, setLoading] = useState(false);
 
   const fetchRecipe = async () => {
     try {
       const data = await recipeService.getRecipeById(id);
       setRecipe(data);
+      setIsFavorite(data.favorites?.includes(user?._id));
     } catch {
       toast.error('Failed to load recipe');
     }
   };
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [id, user]);
 
   const handleComment = async (e) => {
     e.preventDefault();
@@ -51,13 +43,16 @@ const RecipeDetailPage = () => {
 
   const handleToggleFavorite = async () => {
     try {
+      setLoading(true);
       await recipeService.toggleFavorite(id);
-      const favorites = await recipeService.getFavorites();
-      setIsFavorite(favorites.includes(id));
       fetchRecipe();
+      const favorites = await recipeService.getFavorites();
+      setIsFavorite(favorites.some(r => r._id === id));
       toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch {
       toast.error('Failed to toggle favorite');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,8 +85,8 @@ const RecipeDetailPage = () => {
       <div className="d-flex align-items-center mb-3">
         <span className="me-3">⭐️ {recipe.averageRating?.toFixed(1) || 0}</span>
         {user && (
-          <button className="btn btn-sm" onClick={handleToggleFavorite}>
-            {isFavorite ? '❤️ Remove Favorite' : '🤍 Add to Favorites'}
+          <button className="btn btn-sm" onClick={handleToggleFavorite} disabled={loading}>
+            {loading ? '...' : isFavorite ? '❤️ Remove Favorite' : '🤍 Add to Favorites'}
           </button>
         )}
       </div>

@@ -7,33 +7,30 @@ import { Link } from 'react-router-dom';
 const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const checkFavorite = async () => {
-      if (user) {
-        const favorites = await recipeService.getFavorites();
-        setIsFavorite(favorites.includes(recipe._id));
-      }
-    };
-    checkFavorite();
+    setIsFavorite(recipe.favorites?.includes(user?._id));
   }, [recipe, user]);
 
   const handleFavorite = async () => {
     if (!user) return toast.error('Login to favorite recipes');
     try {
+      setLoading(true);
       await recipeService.toggleFavorite(recipe._id);
-      const updatedFavorites = await recipeService.getFavorites();
-      setIsFavorite(updatedFavorites.includes(recipe._id));
-      onFavoritesUpdate(updatedFavorites);
+      const favorites = await recipeService.getFavorites();
+      setIsFavorite(favorites.some(r => r._id === recipe._id));
+      onFavoritesUpdate(favorites);
       toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch {
       toast.error('Failed to update favorites');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="card shadow-sm mb-3 h-100 d-flex flex-column">
-      
       <div className="w-100" style={{ flex: 1, overflow: 'hidden' }}>
         <img
           src={recipe.imageUrl || recipe.image}
@@ -54,8 +51,9 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
           <button
             className={`btn btn-sm ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}`}
             onClick={handleFavorite}
+            disabled={loading}
           >
-            {isFavorite ? 'Unfavorite' : 'Favorite'}
+            {loading ? '...' : isFavorite ? 'Unfavorite' : 'Favorite'}
           </button>
         </div>
       </div>
