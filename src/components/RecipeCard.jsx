@@ -26,7 +26,6 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
 
   return (
     <div className="card shadow-sm mb-3 h-100 d-flex flex-column">
-      
       <div className="w-100" style={{ flex: 1, overflow: 'hidden' }}>
         <img
           src={recipe.imageUrl || recipe.image}
@@ -48,7 +47,7 @@ const RecipeCard = ({ recipe, onFavoritesUpdate }) => {
             className={`btn btn-sm ${isFavorite ? 'btn-warning' : 'btn-outline-warning'}`}
             onClick={handleFavorite}
           >
-            {isFavorite ? 'Unfavorite' : 'Favorite'}
+            {isFavorite ? 'Remove Favorite' : 'Add to Favorites'}
           </button>
         </div>
       </div>
