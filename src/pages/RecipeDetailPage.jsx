@@ -1,117 +1,51 @@
-import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import recipeService from '../services/recipeService';
-import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const { user, favorites, setFavorites } = useAuth();
   const [recipe, setRecipe] = useState(null);
-  const [comment, setComment] = useState('');
-  const [rating, setRating] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
-
-  useEffect(() => {
-    fetchRecipe();
-  }, [id]);
-
-  useEffect(() => {
-    setIsFavorited(favorites?.includes(id));
-  }, [favorites, id]);
 
   const fetchRecipe = async () => {
     try {
       const data = await recipeService.getRecipeById(id);
       setRecipe(data);
-    } catch {
+    } catch (err) {
       toast.error('Failed to load recipe');
     }
   };
 
-  const handleFavorite = async () => {
+  useEffect(() => {
+    fetchRecipe();
+  }, [id]);
+
+  const handleToggleFavorite = async () => {
     try {
-      const { message, added } = await recipeService.toggleFavorite(id);
-      toast.success(message);
-
-      const updatedFavorites = added
-        ? [...favorites, id]
-        : favorites.filter(favId => favId !== id);
-
-      setFavorites(updatedFavorites);
-      setIsFavorited(added);
-    } catch {
+      const res = await recipeService.toggleFavorite(id);
+      toast.success(res.message);
+      fetchRecipe();
+    } catch (err) {
       toast.error('Failed to update favorites');
     }
   };
 
-  const handleComment = async (e) => {
-    e.preventDefault();
-    if (!comment) return;
-    try {
-      await recipeService.submitComment(id, { comment, rating });
-      toast.success('Comment added');
-      setComment('');
-      setRating(0);
-      fetchRecipe();
-    } catch {
-      toast.error('Failed to add comment');
-    }
-  };
-
-  if (!recipe) return <div className="text-center mt-5">Loading...</div>;
+  if (!recipe) return <div>Loading...</div>;
 
   return (
-    <div className="container mt-4">
-      <h2>{recipe.title}</h2>
-      <p className="text-muted">By {recipe.creatorName || 'Unknown'}</p>
-      {recipe.imageUrl && (
-        <img
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          className="img-fluid mb-3"
-          style={{ maxHeight: '400px', objectFit: 'cover' }}
-        />
-      )}
-      <p>{recipe.description}</p>
-
-      <div className="d-flex align-items-center mb-3">
-        <span className="me-3">⭐️ {recipe.averageRating?.toFixed(1) || 0}</span>
-        {user && (
-          <button className="btn btn-sm" onClick={handleFavorite}>
-            {isFavorited ? '❤️ Remove Favorite' : '🤍 Add to Favorites'}
-          </button>
-        )}
-      </div>
-
-      {user && (
-        <form onSubmit={handleComment} className="mb-4">
-          <h5>Leave a Comment</h5>
-          <div className="mb-2">
-            <textarea
-              className="form-control"
-              placeholder="Your comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="me-2">Rating:</label>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                className={`btn btn-sm ${rating >= star ? 'btn-warning' : 'btn-outline-secondary'} me-1`}
-                onClick={() => setRating(star)}
-              >
-                ⭐️
-              </button>
-            ))}
-          </div>
-          <button className="btn btn-primary">Post Comment</button>
-        </form>
-      )}
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-2">{recipe.title}</h1>
+      <p className="text-gray-500 mb-4">By {recipe.creatorName}</p>
+      <img src={recipe.imageUrl} alt={recipe.title} className="w-full h-64 object-cover rounded mb-4" />
+      <h2 className="font-semibold">Ingredients:</h2>
+      <ul className="list-disc ml-5 mb-4">
+        {recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
+      </ul>
+      <h2 className="font-semibold">Instructions:</h2>
+      <p className="mb-4">{recipe.instructions}</p>
+      <button onClick={handleToggleFavorite} className={`btn ${recipe.isFavorited ? 'bg-yellow-500' : 'bg-yellow-100'}`}>
+        {recipe.isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+      </button>
     </div>
   );
 };

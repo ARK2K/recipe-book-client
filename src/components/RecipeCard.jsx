@@ -1,24 +1,15 @@
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { toast } from 'sonner';
 
-const RecipeCard = ({ recipe }) => {
+const RecipeCard = ({ recipe, refreshRecipes }) => {
   const navigate = useNavigate();
-  const { favorites, setFavorites } = useAuth();
-
-  const isFavorited = favorites.includes(recipe._id);
 
   const handleToggleFavorite = async () => {
     try {
       const res = await recipeService.toggleFavorite(recipe._id);
-      if (res.message?.includes('added')) {
-        toast.success('Added to favorites');
-        setFavorites(prev => [...prev, recipe._id]);
-      } else {
-        toast.success('Removed from favorites');
-        setFavorites(prev => prev.filter(id => id !== recipe._id));
-      }
+      toast.success(res.message);
+      if (refreshRecipes) refreshRecipes();
     } catch (err) {
       toast.error('Failed to update favorites');
     }
@@ -33,11 +24,8 @@ const RecipeCard = ({ recipe }) => {
         <button onClick={() => navigate(`/recipes/${recipe._id}`)} className="btn btn-primary">
           View
         </button>
-        <button
-          onClick={handleToggleFavorite}
-          className={`btn ${isFavorited ? 'bg-yellow-500' : 'bg-yellow-100'}`}
-        >
-          {isFavorited ? 'Unfavorite' : 'Favorite'}
+        <button onClick={handleToggleFavorite} className={`btn ${recipe.isFavorited ? 'bg-yellow-500' : 'bg-yellow-100'}`}>
+          {recipe.isFavorited ? 'Unfavorite' : 'Favorite'}
         </button>
       </div>
     </div>
