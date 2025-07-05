@@ -36,7 +36,9 @@ const RecipeCard = ({ recipe }) => {
           <button
             onClick={handleFavorite}
             className={`px-3 py-1 rounded ${
-              isFavorite ? 'bg-yellow-500 text-white' : 'border border-yellow-500 text-yellow-500'
+              isFavorite
+                ? 'bg-red-500 text-white'
+                : 'border border-yellow-500 text-yellow-500'
             }`}
           >
             {isFavorite ? 'Unfavorite' : 'Favorite'}
