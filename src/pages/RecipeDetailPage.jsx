@@ -39,7 +39,6 @@ const RecipeDetailPage = () => {
       const res = await recipeService.toggleFavorite(id);
       toast.success(res.message);
 
-      // Sync based on backend response
       if (res.message.includes('added')) {
         setFavorites((prev) => [...prev, id]);
       } else {
@@ -85,11 +84,7 @@ const RecipeDetailPage = () => {
       {user && (
         <button
           onClick={handleFavorite}
-          className={`mt-4 px-4 py-2 rounded border ${
-            isFavorite
-              ? 'bg-yellow-500 border-yellow-500 text-white'
-              : 'bg-white border-yellow-500 text-yellow-500'
-          }`}
+          className={`mt-4 btn ${isFavorite ? 'btn-danger' : 'btn-warning'}`}
         >
           {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
         </button>
@@ -107,8 +102,9 @@ const RecipeDetailPage = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            className={`text-2xl ${rating >= star ? 'text-yellow-500' : 'text-gray-400'}`}
+            className={`text-2xl ${rating >= star ? 'text-warning' : 'text-muted'}`}
             onClick={() => setRating(star)}
+            type="button"
           >
             ★
           </button>
@@ -120,15 +116,15 @@ const RecipeDetailPage = () => {
 
       <h2 className="text-xl font-semibold mt-6">Comments</h2>
       {recipe.comments.map((c, idx) => (
-        <div key={idx} className="border-t pt-2 mt-2">
-          <p className="font-semibold">{c.user?.name || 'Anonymous'}</p>
+        <div key={idx} className="border-top pt-2 mt-2">
+          <p className="fw-bold">{c.user?.name || 'Anonymous'}</p>
           <p>{c.text}</p>
-          <div className="text-yellow-500">
+          <div className="text-warning">
             {Array.from({ length: c.stars }, (_, i) => (
               <span key={i}>★</span>
             ))}
           </div>
-          <p className="text-sm text-gray-500">{new Date(c.createdAt).toLocaleString()}</p>
+          <p className="text-muted">{new Date(c.createdAt).toLocaleString()}</p>
         </div>
       ))}
     </div>
