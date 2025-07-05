@@ -6,39 +6,30 @@ import { toast } from 'sonner';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const { user, favorites, setFavorites } = useAuth();
-
+  const { user } = useAuth();
   const [recipe, setRecipe] = useState(null);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  useEffect(() => {
-    const fetchRecipe = async () => {
-      try {
-        const res = await recipeService.getRecipeById(id);
-        setRecipe(res);
-      } catch (err) {
-        toast.error('Failed to load recipe');
-      }
-    };
+  const fetchRecipe = async () => {
+    try {
+      const res = await recipeService.getRecipeById(id);
+      setRecipe(res);
+      setIsFavorite(res.isFavorited || false);
+    } catch (err) {
+      toast.error('Failed to load recipe');
+    }
+  };
 
+  useEffect(() => {
     fetchRecipe();
   }, [id]);
-
-  useEffect(() => {
-    if (favorites && favorites.includes(id)) {
-      setIsFavorite(true);
-    } else {
-      setIsFavorite(false);
-    }
-  }, [favorites, id]);
 
   const handleFavorite = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      const updatedFavorites = await recipeService.getFavorites();
-      setFavorites(updatedFavorites.map(r => r._id));
+      setIsFavorite(!isFavorite);
       toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to update favorites');
@@ -51,8 +42,7 @@ const RecipeDetailPage = () => {
       await recipeService.submitComment(id, { comment, rating });
       setComment('');
       setRating(0);
-      const updated = await recipeService.getRecipeById(id);
-      setRecipe(updated);
+      fetchRecipe();
       toast.success('Comment added');
     } catch (err) {
       toast.error('Failed to add comment');
