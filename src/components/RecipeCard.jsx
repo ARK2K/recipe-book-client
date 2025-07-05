@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,29 +6,14 @@ import { toast } from 'sonner';
 
 const RecipeCard = ({ recipe }) => {
   const navigate = useNavigate();
-  const { user, favorites, setFavorites } = useAuth();
-
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    if (favorites && favorites.includes(recipe._id)) {
-      setIsFavorite(true);
-    } else {
-      setIsFavorite(false);
-    }
-  }, [favorites, recipe._id]);
+  const { user } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(recipe.isFavorited || false);
 
   const handleFavorite = async () => {
     try {
-      const res = await recipeService.toggleFavorite(recipe._id);
-      toast.success(res.message);
-      
-      // Sync based on backend response
-      if (res.message.includes('added')) {
-        setFavorites((prev) => [...prev, recipe._id]);
-      } else {
-        setFavorites((prev) => prev.filter((id) => id !== recipe._id));
-      }
+      await recipeService.toggleFavorite(recipe._id);
+      setIsFavorite(!isFavorite);
+      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to update favorites');
     }
@@ -50,10 +35,8 @@ const RecipeCard = ({ recipe }) => {
         {user && (
           <button
             onClick={handleFavorite}
-            className={`px-3 py-1 rounded border ${
-              isFavorite
-                ? 'bg-yellow-500 border-yellow-500 text-white'
-                : 'bg-white border-yellow-500 text-yellow-500'
+            className={`px-3 py-1 rounded ${
+              isFavorite ? 'bg-yellow-500 text-white' : 'border border-yellow-500 text-yellow-500'
             }`}
           >
             {isFavorite ? 'Unfavorite' : 'Favorite'}
