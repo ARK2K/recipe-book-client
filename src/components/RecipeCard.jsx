@@ -20,10 +20,15 @@ const RecipeCard = ({ recipe }) => {
 
   const handleFavorite = async () => {
     try {
-      await recipeService.toggleFavorite(recipe._id);
-      const updatedFavorites = await recipeService.getFavorites();
-      setFavorites(updatedFavorites.map(r => r._id));
-      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+      const res = await recipeService.toggleFavorite(recipe._id);
+      toast.success(res.message);
+      
+      // Sync based on backend response
+      if (res.message.includes('added')) {
+        setFavorites((prev) => [...prev, recipe._id]);
+      } else {
+        setFavorites((prev) => prev.filter((id) => id !== recipe._id));
+      }
     } catch (err) {
       toast.error('Failed to update favorites');
     }
@@ -45,10 +50,10 @@ const RecipeCard = ({ recipe }) => {
         {user && (
           <button
             onClick={handleFavorite}
-            className={`px-3 py-1 rounded border transition ${
+            className={`px-3 py-1 rounded border ${
               isFavorite
-                ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                : 'border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white'
+                ? 'bg-yellow-500 border-yellow-500 text-white'
+                : 'bg-white border-yellow-500 text-yellow-500'
             }`}
           >
             {isFavorite ? 'Unfavorite' : 'Favorite'}
