@@ -6,30 +6,39 @@ import { toast } from 'sonner';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, favorites, setFavorites } = useAuth();
+
   const [recipe, setRecipe] = useState(null);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const fetchRecipe = async () => {
-    try {
-      const res = await recipeService.getRecipeById(id);
-      setRecipe(res);
-      setIsFavorite(res.isFavorited || false);
-    } catch (err) {
-      toast.error('Failed to load recipe');
-    }
-  };
-
   useEffect(() => {
+    const fetchRecipe = async () => {
+      try {
+        const res = await recipeService.getRecipeById(id);
+        setRecipe(res);
+      } catch (err) {
+        toast.error('Failed to load recipe');
+      }
+    };
+
     fetchRecipe();
   }, [id]);
+
+  useEffect(() => {
+    if (favorites && favorites.includes(id)) {
+      setIsFavorite(true);
+    } else {
+      setIsFavorite(false);
+    }
+  }, [favorites, id]);
 
   const handleFavorite = async () => {
     try {
       await recipeService.toggleFavorite(id);
-      setIsFavorite(!isFavorite);
+      const updatedFavorites = await recipeService.getFavorites();
+      setFavorites(updatedFavorites.map(r => r._id));
       toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (err) {
       toast.error('Failed to update favorites');
@@ -42,7 +51,8 @@ const RecipeDetailPage = () => {
       await recipeService.submitComment(id, { comment, rating });
       setComment('');
       setRating(0);
-      fetchRecipe();
+      const updated = await recipeService.getRecipeById(id);
+      setRecipe(updated);
       toast.success('Comment added');
     } catch (err) {
       toast.error('Failed to add comment');
@@ -70,8 +80,10 @@ const RecipeDetailPage = () => {
       {user && (
         <button
           onClick={handleFavorite}
-          className={`mt-4 px-4 py-2 rounded ${
-            isFavorite ? 'bg-yellow-500 text-white' : 'border border-yellow-500 text-yellow-500'
+          className={`mt-4 px-4 py-2 rounded border transition ${
+            isFavorite
+              ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+              : 'border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white'
           }`}
         >
           {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
