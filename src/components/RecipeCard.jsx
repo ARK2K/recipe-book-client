@@ -35,11 +35,7 @@ const RecipeCard = ({ recipe }) => {
         {user && (
           <button
             onClick={handleFavorite}
-            className={`px-3 py-1 rounded ${
-              isFavorite
-                ? 'bg-red-500 text-white'
-                : 'border border-yellow-500 text-yellow-500'
-            }`}
+            className={`btn ${isFavorite ? 'btn-danger' : 'btn-warning'}`}
           >
             {isFavorite ? 'Unfavorite' : 'Favorite'}
           </button>
