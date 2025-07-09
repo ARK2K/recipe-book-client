@@ -11,7 +11,8 @@ const RecipeDetailPage = () => {
   const [recipe, setRecipe] = useState(null);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+
+  const isFavorite = favorites.includes(id);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -22,27 +23,17 @@ const RecipeDetailPage = () => {
         toast.error('Failed to load recipe');
       }
     };
-
     fetchRecipe();
   }, [id]);
-
-  useEffect(() => {
-    if (favorites && favorites.includes(id)) {
-      setIsFavorite(true);
-    } else {
-      setIsFavorite(false);
-    }
-  }, [favorites, id]);
 
   const handleFavorite = async () => {
     try {
       const res = await recipeService.toggleFavorite(id);
       toast.success(res.message);
-
-      if (res.message.includes('added')) {
-        setFavorites((prev) => [...prev, id]);
+      if (res.added) {
+        setFavorites(prev => [...prev, id]);
       } else {
-        setFavorites((prev) => prev.filter((fid) => fid !== id));
+        setFavorites(prev => prev.filter(fid => fid !== id));
       }
     } catch (err) {
       toast.error('Failed to update favorites');

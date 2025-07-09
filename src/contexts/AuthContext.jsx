@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import axiosInstance from '../utils/axiosInstance';
+import recipeService from '../services/recipeService';
 
 const AuthContext = createContext();
 
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
           if (isExpired) {
             await refreshToken();
           } else {
-            await loadProfile();
+            await loadProfileAndFavorites();
           }
         } catch (err) {
           logout();
@@ -32,12 +33,32 @@ export const AuthProvider = ({ children }) => {
     checkToken();
   }, [token]);
 
-  const loadProfile = async () => {
-    const profileRes = await axiosInstance.get('/api/users/profile', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setUser(profileRes.data);
-    setFavorites(profileRes.data.favorites?.map(r => r._id) || []);
+  useEffect(() => {
+    if (user) {
+      fetchFavorites();
+    }
+  }, [user]);
+
+  const loadProfileAndFavorites = async () => {
+    try {
+      const profileRes = await axiosInstance.get('/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(profileRes.data);
+      await fetchFavorites();
+    } catch (err) {
+      logout();
+    }
+  };
+
+  const fetchFavorites = async () => {
+    try {
+      const favs = await recipeService.getFavorites();
+      setFavorites(favs.map(r => r._id));
+    } catch (err) {
+      console.error('Failed to fetch favorites:', err);
+      setFavorites([]);
+    }
   };
 
   const refreshToken = async () => {
@@ -47,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       });
       setToken(data.token);
       localStorage.setItem('token', data.token);
-      await loadProfile();
+      await loadProfileAndFavorites();
     } catch (err) {
       logout();
     }
@@ -65,9 +86,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axiosInstance.get('/api/users/logout', {
-        withCredentials: true,
-      });
+      await axiosInstance.get('/api/users/logout', { withCredentials: true });
     } catch (err) {}
     localStorage.removeItem('token');
     setToken('');
@@ -85,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         favorites,
         setFavorites,
+        refreshFavorites: fetchFavorites,
       }}
     >
       {children}

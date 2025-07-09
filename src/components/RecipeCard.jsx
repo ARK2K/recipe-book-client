@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,14 +5,19 @@ import { toast } from 'sonner';
 
 const RecipeCard = ({ recipe }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(recipe.isFavorited || false);
+  const { user, favorites, setFavorites } = useAuth();
+
+  const isFavorite = favorites.includes(recipe._id);
 
   const handleFavorite = async () => {
     try {
-      await recipeService.toggleFavorite(recipe._id);
-      setIsFavorite(!isFavorite);
-      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
+      const res = await recipeService.toggleFavorite(recipe._id);
+      toast.success(res.message);
+      if (res.added) {
+        setFavorites(prev => [...prev, recipe._id]);
+      } else {
+        setFavorites(prev => prev.filter(id => id !== recipe._id));
+      }
     } catch (err) {
       toast.error('Failed to update favorites');
     }
