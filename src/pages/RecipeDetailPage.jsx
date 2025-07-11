@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, favorites, setFavorites } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
@@ -54,6 +55,17 @@ const RecipeDetailPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this recipe?')) return;
+    try {
+      await recipeService.deleteRecipe(recipe._id, user.token);
+      toast.success('Recipe deleted');
+      navigate('/');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete');
+    }
+  };
+
   if (!recipe) return <div>Loading...</div>;
 
   return (
@@ -61,6 +73,17 @@ const RecipeDetailPage = () => {
       <img src={recipe.imageUrl || recipe.image || '/placeholder.png'} alt={recipe.title} className="w-full h-80 object-cover rounded-xl" />
       <h1 className="text-3xl font-bold my-3">{recipe.title}</h1>
       <p className="text-gray-600">By {recipe.creatorName}</p>
+
+      {user && user._id === recipe.creatorId && (
+        <div className="flex gap-2 mt-3 mb-3">
+          <button onClick={() => navigate(`/edit/${recipe._id}`)} className="btn btn-warning">
+            Edit
+          </button>
+          <button onClick={handleDelete} className="btn btn-danger">
+            Delete
+          </button>
+        </div>
+      )}
 
       <h2 className="text-xl font-semibold mt-4">Ingredients:</h2>
       <ul className="list-disc list-inside">
