@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { user, favorites, setFavorites } = useAuth();
+  const navigate = useNavigate();
 
   const [recipe, setRecipe] = useState(null);
   const [comment, setComment] = useState('');
@@ -20,7 +20,7 @@ const RecipeDetailPage = () => {
       try {
         const res = await recipeService.getRecipeById(id);
         setRecipe(res);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load recipe');
       }
     };
@@ -32,11 +32,11 @@ const RecipeDetailPage = () => {
       const res = await recipeService.toggleFavorite(id);
       toast.success(res.message);
       if (res.added) {
-        setFavorites(prev => [...prev, id]);
+        setFavorites((prev) => [...prev, id]);
       } else {
-        setFavorites(prev => prev.filter(fid => fid !== id));
+        setFavorites((prev) => prev.filter((fid) => fid !== id));
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to update favorites');
     }
   };
@@ -50,88 +50,101 @@ const RecipeDetailPage = () => {
       const updated = await recipeService.getRecipeById(id);
       setRecipe(updated);
       toast.success('Comment added');
-    } catch (err) {
+    } catch {
       toast.error('Failed to add comment');
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this recipe?')) return;
-    try {
-      await recipeService.deleteRecipe(recipe._id, user.token);
-      toast.success('Recipe deleted');
-      navigate('/');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete');
-    }
-  };
-
-  if (!recipe) return <div>Loading...</div>;
+  if (!recipe) return <div className="text-center my-5">Loading...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <img src={recipe.imageUrl || recipe.image || '/placeholder.png'} alt={recipe.title} className="w-full h-80 object-cover rounded-xl" />
-      <h1 className="text-3xl font-bold my-3">{recipe.title}</h1>
-      <p className="text-gray-600">By {recipe.creatorName}</p>
-
-      {user && user._id === recipe.creatorId && (
-        <div className="flex gap-2 mt-3 mb-3">
-          <button onClick={() => navigate(`/edit/${recipe._id}`)} className="btn btn-warning">
-            Edit
-          </button>
-          <button onClick={handleDelete} className="btn btn-danger">
-            Delete
-          </button>
+    <div className="container py-4">
+      <div className="text-center mb-4">
+        <div className="ratio ratio-16x9 mb-3">
+          <img
+            src={recipe.imageUrl || recipe.image || '/placeholder.png'}
+            alt={recipe.title}
+            className="img-fluid rounded"
+            style={{ objectFit: 'contain' }}
+          />
         </div>
-      )}
+        <h1>{recipe.title}</h1>
+        <p className="text-muted">By {recipe.creatorName}</p>
+        {user && (
+          <button
+            onClick={handleFavorite}
+            className={`btn ${isFavorite ? 'btn-danger' : 'btn-warning'} my-2`}
+          >
+            {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
+          </button>
+        )}
+      </div>
 
-      <h2 className="text-xl font-semibold mt-4">Ingredients:</h2>
-      <ul className="list-disc list-inside">
+      <h4>Ingredients:</h4>
+      <ul>
         {recipe.ingredients.map((ing, idx) => (
           <li key={idx}>{ing}</li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-semibold mt-4">Instructions:</h2>
+      <h4 className="mt-3">Instructions:</h4>
       <p>{recipe.instructions}</p>
 
-      {user && (
-        <button
-          onClick={handleFavorite}
-          className={`mt-4 btn ${isFavorite ? 'btn-danger' : 'btn-warning'}`}
-        >
-          {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
-        </button>
+      {user?._id === recipe.creatorId && (
+        <div className="my-3 d-flex gap-2">
+          <Link to={`/recipes/edit/${recipe._id}`} className="btn btn-outline-primary">
+            Edit
+          </Link>
+          <button
+            className="btn btn-outline-danger"
+            onClick={async () => {
+              try {
+                await recipeService.deleteRecipe(recipe._id);
+                toast.success('Recipe deleted');
+                navigate('/');
+              } catch {
+                toast.error('Failed to delete recipe');
+              }
+            }}
+          >
+            Delete
+          </button>
+        </div>
       )}
 
-      <h2 className="text-xl font-semibold mt-6">Leave a Comment</h2>
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="w-full border p-2 rounded my-2"
-        placeholder="Your comment"
-      />
-      <div className="flex items-center gap-2">
-        <label>Rating:</label>
+      <hr />
+
+      <h4>Leave a Comment</h4>
+      <div className="mb-3">
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="form-control"
+          rows={3}
+          placeholder="Your comment"
+        />
+      </div>
+      <div className="mb-2">
+        <label className="me-2">Rating:</label>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            className={`text-2xl ${rating >= star ? 'text-warning' : 'text-muted'}`}
-            onClick={() => setRating(star)}
             type="button"
+            className={`btn btn-sm ${rating >= star ? 'btn-warning' : 'btn-outline-secondary'} me-1`}
+            onClick={() => setRating(star)}
           >
             ★
           </button>
         ))}
       </div>
-      <button onClick={handleComment} className="mt-2 btn btn-primary">
+      <button onClick={handleComment} className="btn btn-primary mb-4">
         Post Comment
       </button>
 
-      <h2 className="text-xl font-semibold mt-6">Comments</h2>
+      <h4>Comments</h4>
       {recipe.comments.map((c, idx) => (
-        <div key={idx} className="border-top pt-2 mt-2">
-          <p className="fw-bold">{c.user?.name || 'Anonymous'}</p>
+        <div key={idx} className="border-top pt-3 mt-3">
+          <strong>{c.user?.name || 'Anonymous'}</strong>
           <p>{c.text}</p>
           <div className="text-warning">
             {Array.from({ length: c.stars }, (_, i) => (
