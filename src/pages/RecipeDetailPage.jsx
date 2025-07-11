@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import recipeService from '../services/recipeService';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import { Button, Modal } from 'react-bootstrap';
 
 const RecipeDetailPage = () => {
   const { id } = useParams();
-  const { user, favorites, setFavorites } = useAuth();
   const navigate = useNavigate();
+  const { user, favorites, setFavorites } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const isFavorite = favorites.includes(id);
 
@@ -20,23 +21,23 @@ const RecipeDetailPage = () => {
     const fetchRecipe = async () => {
       try {
         const res = await recipeService.getRecipeById(id);
+        if (!res || Object.keys(res).length === 0) throw new Error('Not found');
         setRecipe(res);
-      } catch {
-        toast.error('Failed to load recipe');
+      } catch (err) {
+        toast.error('Recipe not found');
+        navigate('/');
       }
     };
     fetchRecipe();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleFavorite = async () => {
     try {
       const res = await recipeService.toggleFavorite(id);
       toast.success(res.message);
-      if (res.added) {
-        setFavorites((prev) => [...prev, id]);
-      } else {
-        setFavorites((prev) => prev.filter((fid) => fid !== id));
-      }
+      setFavorites((prev) =>
+        res.added ? [...prev, id] : prev.filter((fid) => fid !== id)
+      );
     } catch {
       toast.error('Failed to update favorites');
     }
@@ -56,9 +57,9 @@ const RecipeDetailPage = () => {
     }
   };
 
-  const confirmDelete = async () => {
+  const handleDelete = async () => {
     try {
-      await recipeService.deleteRecipe(recipe._id);
+      await recipeService.deleteRecipe(id);
       toast.success('Recipe deleted');
       navigate('/');
     } catch {
@@ -70,134 +71,87 @@ const RecipeDetailPage = () => {
 
   return (
     <div className="container py-4">
-      {/* Image and title */}
-      <div className="text-center mb-4">
-        <div className="ratio ratio-16x9 mb-3">
-          <img
-            src={recipe.imageUrl || recipe.image || '/placeholder.png'}
-            alt={recipe.title}
-            className="img-fluid rounded"
-            style={{ objectFit: 'contain' }}
-          />
-        </div>
-        <h1>{recipe.title}</h1>
-        <p className="text-muted">By {recipe.creatorName}</p>
-        {user && (
-          <button
-            onClick={handleFavorite}
-            className={`btn ${isFavorite ? 'btn-danger' : 'btn-warning'} my-2`}
-          >
-            {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
-          </button>
-        )}
-      </div>
+      <img
+        src={recipe.imageUrl || recipe.image || '/placeholder.png'}
+        alt={recipe.title}
+        className="img-fluid rounded mb-3"
+        style={{ maxHeight: '400px', objectFit: 'cover', width: '100%' }}
+      />
+      <h1 className="display-5 fw-bold mb-1">{recipe.title}</h1>
+      <p className="text-muted">By {recipe.creatorName}</p>
 
-      {/* Ingredients and instructions */}
-      <h4>Ingredients:</h4>
-      <ul>
+      <h2 className="h5 mt-4">Ingredients:</h2>
+      <ul className="list-group list-group-flush">
         {recipe.ingredients.map((ing, idx) => (
-          <li key={idx}>{ing}</li>
+          <li key={idx} className="list-group-item">{ing}</li>
         ))}
       </ul>
 
-      <h4 className="mt-3">Instructions:</h4>
+      <h2 className="h5 mt-4">Instructions:</h2>
       <p>{recipe.instructions}</p>
 
-      {/* Edit & Delete */}
-      {user?._id === recipe.creatorId && (
-        <div className="my-3 d-flex gap-2">
-          <Link to={`/recipes/edit/${recipe._id}`} className="btn btn-outline-primary">
-            Edit
-          </Link>
-          <button
-            className="btn btn-outline-danger"
-            onClick={() => setShowDeleteModal(true)}
-          >
-            Delete
-          </button>
-        </div>
+      {user && (
+        <Button
+          variant={isFavorite ? 'danger' : 'warning'}
+          className="mt-3 me-2"
+          onClick={handleFavorite}
+        >
+          {isFavorite ? 'Unfavorite' : 'Add to Favorites'}
+        </Button>
       )}
 
-      {/* Comment form */}
-      <hr />
-      <h4>Leave a Comment</h4>
-      <div className="mb-3">
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="form-control"
-          rows={3}
-          placeholder="Your comment"
-        />
-      </div>
-      <div className="mb-2">
-        <label className="me-2">Rating:</label>
+      {user && user._id === recipe.creatorId && (
+        <>
+          <Link to={`/edit/${id}`} className="btn btn-outline-primary mt-3 me-2">Edit</Link>
+          <Button variant="outline-danger" className="mt-3" onClick={() => setShowModal(true)}>Delete</Button>
+        </>
+      )}
+
+      <h2 className="h5 mt-5">Leave a Comment</h2>
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        className="form-control my-2"
+        rows={3}
+        placeholder="Your comment"
+      />
+      <div className="d-flex align-items-center gap-2">
+        <label className="fw-bold">Rating:</label>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            type="button"
-            className={`btn btn-sm ${rating >= star ? 'btn-warning' : 'btn-outline-secondary'} me-1`}
+            className={`btn btn-sm ${rating >= star ? 'btn-warning' : 'btn-outline-secondary'}`}
             onClick={() => setRating(star)}
+            type="button"
           >
             ★
           </button>
         ))}
       </div>
-      <button onClick={handleComment} className="btn btn-primary mb-4">
-        Post Comment
-      </button>
+      <Button onClick={handleComment} className="btn btn-primary mt-2">Post Comment</Button>
 
-      {/* Comments List */}
-      <h4>Comments</h4>
+      <h2 className="h5 mt-5">Comments</h2>
       {recipe.comments.map((c, idx) => (
-        <div key={idx} className="border-top pt-3 mt-3">
-          <strong>{c.user?.name || 'Anonymous'}</strong>
-          <p>{c.text}</p>
+        <div key={idx} className="border-top pt-2 mt-2">
+          <p className="fw-bold mb-0">{c.user?.name || 'Anonymous'}</p>
+          <p className="mb-1">{c.text}</p>
           <div className="text-warning">
-            {Array.from({ length: c.stars }, (_, i) => (
-              <span key={i}>★</span>
-            ))}
+            {Array.from({ length: c.stars }, (_, i) => <span key={i}>★</span>)}
           </div>
-          <p className="text-muted">{new Date(c.createdAt).toLocaleString()}</p>
+          <p className="text-muted small">{new Date(c.createdAt).toLocaleString()}</p>
         </div>
       ))}
 
-      {showDeleteModal && (
-        <div
-          className="modal show fade d-block"
-          tabIndex="-1"
-          role="dialog"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-        >
-          <div className="modal-dialog modal-dialog-centered" role="document">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Deletion</h5>
-                <button type="button" className="btn-close" onClick={() => setShowDeleteModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to delete this recipe?</p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowDeleteModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={confirmDelete}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this recipe?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button variant="danger" onClick={handleDelete}>Delete</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
